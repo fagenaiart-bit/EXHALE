@@ -18,7 +18,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
   :root{
     color-scheme: dark;
@@ -30,7 +30,7 @@
     --border-hairline:#273132;
     --glow-aqua:0 0 28px 0 #2feada40;
     --edge-lift:0 8px 24px 0 #00000066;
-    --font-sans:"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-sans:"Plus Jakarta Sans", "Manrope", ui-sans-serif, system-ui, sans-serif;
     --font-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   [hidden]{display:none!important;}
@@ -250,7 +250,7 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pluralUk=(n,a,b,c)=>{ const m=n%10,h=n%100; return m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c); };
   const I18N={
-    uk:{ name:['ВИ','ДИХ'], title:'Видих',
+    uk:{ name:['ВИ','ДИХАЙ'], title:'Видихай',
       ask:'Що зараз у тебе в голові?', askSub:'Говори потоком, як є. Я розберу на окремі думки й заберу їх.',
       fieldLabel:'Що в голові', placeholder:'Думаю про те, що… і ще про… а ще…',
       count:n=>'У сфері · '+n, exhale:'Видихнути', demo:'Показати на прикладі',
