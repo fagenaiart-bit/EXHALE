@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Exhale</title>
+<meta name="description" content="Let your thoughts out. Exhale takes them, keeps them, and shows which ones keep coming back.">
+<meta name="theme-color" content="#080a0a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Exhale">
+<meta property="og:title" content="Exhale">
+<meta property="og:image" content="icons/icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    color-scheme: dark;
+    --bg-canvas:#080a0a; --bg-deep:#00110d; --bg-ambient:#031310;
+    --surface-raised:#0f1c1c; --surface-sunk:#0b1211;
+    --jade-700:#0e4a3d; --jade-500:#135244; --jade-300:#1b5a4c;
+    --aqua-400:#2feada; --aqua-600:#2cb7af;
+    --text-primary:#ecf2f4; --text-secondary:#d5d7d7; --text-muted:#80838e; --text-faint:#4a5452;
+    --border-hairline:#273132;
+    --glow-aqua:0 0 28px 0 #2feada40;
+    --edge-lift:0 8px 24px 0 #00000066;
+    --font-sans:"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  html,body{height:100%;}
+  body{margin:0; background:var(--bg-canvas); color:var(--text-primary); font-family:var(--font-sans); overflow:hidden; -webkit-font-smoothing:antialiased;}
+  .app{position:relative; height:100%; display:flex; flex-direction:column;
+    background:radial-gradient(120% 70% at 50% 34%, var(--bg-ambient) 0%, var(--bg-canvas) 62%), var(--bg-canvas);}
+  .top{position:relative; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:20px 24px 0;}
+  .overline{font-family:var(--font-mono); font-size:11px; line-height:16px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; color:var(--text-muted); font-variant-numeric:tabular-nums;}
+  .ghost{font:600 13px/18px var(--font-sans); color:var(--text-secondary); background:transparent; border:1px solid var(--border-hairline); border-radius:999px; padding:8px 14px; cursor:pointer; transition:border-color .1s,color .1s;}
+  .ghost:hover{border-color:var(--jade-300); color:var(--text-primary);}
+  button:focus-visible, textarea:focus-visible{outline:2px solid var(--aqua-600); outline-offset:3px;}
+  .stage{position:relative; flex:1; min-height:0;}
+  canvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .wordmark{position:absolute; left:50%; transform:translate(-50%,-50%); display:flex; gap:.62em; font:600 22px/1 var(--font-mono); pointer-events:none; z-index:1;}
+  .wordmark span{color:#4a5452; animation:sweep 4.8s ease-in-out infinite;}
+  .wordmark span.dim{animation:none; color:#4a5452;}
+  @keyframes sweep{0%,100%{color:#6ff5e6; text-shadow:0 0 10px #2feada66} 45%{color:#effffc; text-shadow:0 0 16px #2feadaaa} 70%{color:#6ff5e6; text-shadow:0 0 10px #2feada66}}
+  @media (prefers-reduced-motion: reduce){ .wordmark span{animation:none; color:#6ff5e6;} .wordmark span.dim{color:#4a5452;} }
+  @media (max-width:420px){ .wordmark{font-size:18px;} }
+  .speech{position:relative; z-index:2; text-align:center; padding:0 24px; margin:0 auto; max-width:23em; min-height:88px;}
+  .speech p{margin:0; font-size:17px; line-height:28px; color:var(--text-primary); text-wrap:balance;}
+  .speech p.big{font-size:26px; line-height:32px; font-weight:700; letter-spacing:-.01em;}
+  .speech small{display:block; margin-top:8px; font-size:13px; line-height:18px; color:var(--text-muted); text-wrap:balance;}
+  .dock{position:relative; z-index:3; padding:12px 24px calc(20px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .field-wrap{width:100%; max-width:560px; background:var(--surface-raised); border:1px solid var(--border-hairline); border-radius:24px; padding:12px 18px; transition:border-color .1s;}
+  .field-wrap:focus-within{border-color:var(--jade-300);}
+  .field-wrap{display:flex; align-items:flex-end; gap:10px;}
+  .field-wrap textarea{flex:1; min-width:0;}
+  .mic{flex:none; width:44px; height:44px; border-radius:999px; border:1px solid var(--aqua-600); background:transparent; color:var(--aqua-600); display:grid; place-items:center; cursor:pointer; transition:box-shadow .1s, background .1s, color .1s;}
+  .mic[aria-pressed="true"]{background:var(--aqua-400); border-color:var(--aqua-400); color:var(--bg-deep); box-shadow:var(--glow-aqua); animation:live 1.6s ease-in-out infinite;}
+  @keyframes live{50%{box-shadow:0 0 36px 4px #2feada55}}
+  @media (prefers-reduced-motion: reduce){ .mic[aria-pressed="true"]{animation:none;} }
+  textarea{display:block; width:100%; box-sizing:border-box; resize:none; background:transparent; border:0; outline:0; color:var(--text-primary); font:400 16px/24px var(--font-sans); min-height:48px; max-height:120px;}
+  textarea::placeholder{color:var(--text-muted);}
+  .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center;}
+  .primary{font:600 16px/22px var(--font-sans); border:0; border-radius:999px; padding:12px 24px; cursor:pointer; background:var(--aqua-400); color:var(--bg-deep); box-shadow:var(--glow-aqua); font-variant-numeric:tabular-nums;}
+  .primary:disabled{background:var(--surface-sunk); color:var(--text-faint); box-shadow:none; border:1px solid var(--border-hairline); cursor:default;}
+  .link{font:500 13px/18px var(--font-sans); color:var(--text-muted); background:none; border:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:6px;}
+  .link:hover{color:var(--text-secondary);}
+  .fly{position:fixed; left:0; top:0; z-index:6; pointer-events:none; max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    padding:6px 12px; border-radius:999px; background:var(--surface-raised); border:1px solid var(--aqua-600); color:var(--text-primary); font:500 13px/18px var(--font-sans); box-shadow:0 0 16px #2cb7af33;}
+  /* stats */
+  .panel{position:absolute; inset:0; z-index:8; background:var(--bg-canvas); display:flex; flex-direction:column; transform:translateY(24px); opacity:0; pointer-events:none; transition:transform .4s cubic-bezier(.2,.8,.2,1), opacity .25s;}
+  .panel.open{transform:none; opacity:1; pointer-events:auto;}
+  .panel-head{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:20px 24px 16px; max-width:640px; width:100%; margin:0 auto; box-sizing:border-box;}
+  .panel-head h2{margin:8px 0 0; font-size:26px; line-height:32px; font-weight:700; letter-spacing:-.01em;}
+  .panel-body{flex:1; overflow-y:auto; padding:0 24px 32px;}
+  .list{max-width:640px; margin:0 auto; display:flex; flex-direction:column; gap:8px;}
+  .note{max-width:640px; margin:0 auto 16px; font-size:13px; line-height:18px; color:var(--text-muted);}
+  .rowt{display:grid; grid-template-columns:1fr auto; gap:4px 16px; align-items:center; padding:14px 16px; background:var(--surface-raised); border:1px solid var(--border-hairline); border-radius:14px;}
+  .rowt .t{font-size:15px; line-height:22px; font-weight:600; overflow-wrap:anywhere;}
+  .rowt .n{font:500 15px/20px var(--font-mono); color:var(--aqua-400); font-variant-numeric:tabular-nums; text-align:right;}
+  .rowt .c{grid-column:1/-1; font-size:13px; line-height:18px; color:var(--text-secondary); overflow-wrap:anywhere;}
+  .strip{grid-column:1/-1; display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;}
+  .strip i{width:8px; height:8px; border-radius:50%; background:var(--surface-sunk); border:1px solid var(--border-hairline);}
+  .strip i.on{background:var(--aqua-600); border-color:var(--aqua-600);}
+  .group-label{max-width:640px; margin:24px auto 10px;}
+  .once{max-width:640px; margin:0 auto; display:flex; flex-wrap:wrap; gap:8px;}
+  .once span{font-size:13px; line-height:18px; padding:6px 12px; border:1px solid var(--border-hairline); border-radius:999px; color:var(--text-secondary);}
+  .top-right{display:flex; gap:8px; align-items:center;}
+  .lang{display:flex; border:1px solid var(--border-hairline); border-radius:999px; padding:2px;}
+  .lang button{font:500 11px/16px var(--font-mono); letter-spacing:.12em; color:var(--text-muted); background:transparent; border:0; border-radius:999px; padding:6px 10px; cursor:pointer;}
+  .lang button[aria-pressed="true"]{background:var(--surface-raised); color:var(--text-primary);}
+  .checkin{display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:560px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+  .chip{font:600 15px/22px var(--font-sans); color:var(--text-primary); background:var(--surface-raised); border:1px solid var(--border-hairline); border-radius:999px; padding:10px 16px; cursor:pointer; display:flex; align-items:center; gap:8px; transition:border-color .1s, box-shadow .1s;}
+  .chip i{width:8px; height:8px; border-radius:50%; flex:none;}
+  .chip:hover{border-color:var(--jade-300);}
+  .chip[aria-pressed="true"]{border-color:var(--aqua-600); box-shadow:0 0 16px #2cb7af33;}
+  .step{font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; color:var(--text-muted);}
+  .tally{max-width:640px; margin:0 auto; display:flex; flex-wrap:wrap; gap:8px;}
+  .tally span{display:flex; align-items:center; gap:8px; font-size:13px; line-height:18px; padding:6px 12px; border:1px solid var(--border-hairline); border-radius:999px; color:var(--text-secondary);}
+  .tally span i{width:8px; height:8px; border-radius:50%;}
+  .tally b{font:500 13px/18px var(--font-mono); color:var(--text-primary); font-variant-numeric:tabular-nums;}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+  @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
+</style>
+
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}html{height:100%}body{height:100%}</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top">
+    <span class="overline" id="count"></span>
+    <div class="top-right">
+      <div class="lang" role="group" aria-label="Мова / Language">
+        <button type="button" data-lang="uk" aria-pressed="true">UA</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button class="ghost" id="open-stats" type="button" data-t="repeats"></button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage"><canvas id="c" aria-hidden="true"></canvas><div class="wordmark" id="wordmark"></div></div>
+
+  <div class="speech" id="speech" aria-live="polite">
+
+  </div>
+
+  <div class="dock">
+    <div class="checkin" id="checkin" hidden>
+      <div class="step" id="step"></div>
+      <div class="chips" id="chips"></div>
+      <button class="link" id="skip" type="button" data-t="skip"></button>
+    </div>
+    <div class="field-wrap" id="field-wrap">
+      <label class="sr" for="stream" data-t="fieldLabel"></label>
+      <textarea id="stream" rows="2" ></textarea>
+      <button class="mic" id="mic" type="button" aria-pressed="false" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    </div>
+    <div class="actions" id="actions">
+      <button class="primary" id="exhale" type="button" disabled></button>
+      <button class="link" id="demo" type="button" data-t="demo"></button>
+      <button class="ghost" id="again" type="button" data-t="again" hidden></button>
+    </div>
+  </div>
+
+  <section class="panel" id="panel" aria-labelledby="stats-title">
+    <div class="panel-head">
+      <div>
+        <div class="overline" id="stats-meta"></div>
+        <h2 id="stats-title" data-t="repeats"></h2>
+      </div>
+      <button class="ghost" id="close-stats" type="button" data-t="back"></button>
+    </div>
+    <div class="panel-body">
+      <p class="note" id="stats-note"></p>
+      <div class="overline group-label" data-t="moodBefore" style="margin-top:0"></div>
+      <div class="tally" id="mood-tally"></div>
+      <div class="overline group-label" data-t="moodAfterT"></div>
+      <div class="tally" id="after-tally"></div>
+      <div class="overline group-label" data-t="shiftT"></div>
+      <div class="tally" id="shift-tally"></div>
+      <div class="overline group-label" data-t="bodyTitle"></div>
+      <div class="tally" id="body-tally"></div>
+      <div class="overline group-label" data-t="repeats"></div>
+      <div class="list" id="stats-list"></div>
+      <div class="overline group-label" id="once-label" data-t="once" hidden></div>
+      <div class="once" id="once"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pluralUk=(n,a,b,c)=>{ const m=n%10,h=n%100; return m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c); };
+  const I18N={
+    uk:{ name:['ВИ','ДИХ'], title:'Видих',
+      ask:'Що зараз у тебе в голові?', askSub:'Говори потоком, як є. Я розберу на окремі думки й заберу їх.',
+      fieldLabel:'Що в голові', placeholder:'Думаю про те, що… і ще про… а ще…',
+      count:n=>'У сфері · '+n, exhale:'Видихнути', demo:'Показати на прикладі',
+      repeats:'Що повторюється', back:'Назад до сфери', once:'Один раз',
+      listening:['Слухаю.','Так виглядає потік, коли говориш, не зупиняючись.'],
+      sorting:['Видих.','Голова чиста. Розкладаю думки по місцях.'],
+      saved:(n,r)=>['Видих.', `Збережено ${n} ${pluralUk(n,'думку','думки','думок')}.`+(r?` ${r} з них уже приходили раніше.`:' Усе нове.')],
+      meta:(ex,d,t)=>(ex?'Приклад · ':'За весь час · ')+d+' '+pluralUk(d,'видих','видихи','видихів')+' · '+t+' '+pluralUk(t,'думка','думки','думок'),
+      noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
+      note:'Лише рахунок. Думки, які поверталися в різні видихи, стоять угорі.',
+      micOn:'Говори. Кожне речення полетить у сферу.', micOff:'Мікрофон вимкнено.', micLabel:'Говорити голосом', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
+      skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
+      again:'Новий видих', moodBefore:'Настрій до', moodAfterT:'Настрій після', shiftT:'Як змінився настрій', same:'без змін', bodyTitle:'Тіло', mostly:'Найчастіше: ',
+      mood:{calm:'Спокійно',joy:'Радісно',anxious:'Тривожно',sad:'Сумно',irritated:'Роздратовано',empty:'Порожньо'},
+      body:{good:'Добре',energetic:'Енергійно',tired:'Втомлено',weak:'Слабко',tense:'Напружено',pain:'Болить'},
+      last:'Останнє: ', noRepeats:'Повторів поки немає.', aria:(t,n)=>`${t}: у ${n} видихах`,
+      demoText:"Треба нарешті відповісти орендодавцю про ремонт. І ще я так і не подзвонила мамі. Обкладинку для клієнта треба здати до п'ятниці, а я ще навіть не почала. Може я взагалі не встигну? Знову думаю, чи правильно я пішла з тієї роботи. Купити фільтр для води. Орендодавець, мабуть, злиться, що я мовчу.",
+      example:[
+        [['Треба відповісти орендодавцю','Орендодавець'],['Чи правильно я пішла з роботи','Стара робота'],['Не подзвонила мамі','Мама']],
+        [['Орендодавець, мабуть, злиться','Орендодавець'],['Не встигаю з обкладинкою','Обкладинка']],
+        [['Знову про ту роботу','Стара робота'],['Купити фільтр для води','Фільтр для води'],["Обкладинка до п'ятниці",'Обкладинка']],
+        [['Лист орендодавцю досі не написаний','Орендодавець'],['Мамі в неділю','Мама'],['Може, повернутися на ту роботу','Стара робота']],
+        [['Орендодавець і ремонт','Орендодавець'],['Сон збився','Сон']] ] },
+    en:{ name:['EX','HALE'], title:'Exhale',
+      ask:"What's on your mind right now?", askSub:"Let it all out, the way it comes. I'll split it into thoughts and take them.",
+      fieldLabel:"What's on your mind", placeholder:"I keep thinking about… and also… and…",
+      count:n=>'In the sphere · '+n, exhale:'Exhale', demo:'Play an example',
+      repeats:'What keeps coming back', back:'Back to the sphere', once:'Just once',
+      listening:['Listening.','This is what a stream looks like when you just keep talking.'],
+      sorting:['Exhale.','Your head is clear. Sorting the thoughts now.'],
+      saved:(n,r)=>['Exhale.', `Saved ${n} ${n===1?'thought':'thoughts'}.`+(r?` ${r} of them came up before.`:' All new.')],
+      meta:(ex,d,t)=>(ex?'Example · ':'All time · ')+d+' '+(d===1?'exhale':'exhales')+' · '+t+' '+(t===1?'thought':'thoughts'),
+      noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
+      note:'Counts only. Thoughts that returned across different exhales are at the top.',
+      micOn:'Talk. Every sentence will fly into the sphere.', micOff:'Mic is off.', micLabel:'Speak', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
+      skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
+      again:'New exhale', moodBefore:'Mood before', moodAfterT:'Mood after', shiftT:'How the mood shifted', same:'no change', bodyTitle:'Body', mostly:'Mostly ',
+      mood:{calm:'Calm',joy:'Happy',anxious:'Anxious',sad:'Sad',irritated:'Irritated',empty:'Empty'},
+      body:{good:'Good',energetic:'Energetic',tired:'Tired',weak:'Weak',tense:'Tense',pain:'In pain'},
+      last:'Latest: ', noRepeats:'No repeats yet.', aria:(t,n)=>`${t}: in ${n} exhales`,
+      demoText:"I really need to answer the landlord about the repairs. And I still haven't called mom. The client cover is due Friday and I haven't even started. What if I don't make it? Again wondering if leaving that job was right. Buy a water filter. The landlord is probably annoyed that I'm silent.",
+      example:[
+        [['Need to answer the landlord','Landlord'],['Was leaving the job right','Old job'],["Haven't called mom",'Mom']],
+        [['Landlord is probably annoyed','Landlord'],['Behind on the cover','Cover']],
+        [['That job again','Old job'],['Buy a water filter','Water filter'],['Cover due Friday','Cover']],
+        [['Still no email to the landlord','Landlord'],['Mom on Sunday','Mom'],['Maybe go back to that job','Old job']],
+        [['Landlord and repairs','Landlord'],['Sleep is off','Sleep']] ] }
+  };
+  let lang='uk';
+  try{ const v=localStorage.getItem('exhale-lang'); if(v==='en'||v==='uk') lang=v; else if(!/^uk|^ru/i.test(navigator.language||'')) lang='en'; }catch(e){}
+  const L=()=>I18N[lang];
+  const TONE={calm:'#2cb7af',joy:'#48e075',anxious:'#e9c14d',sad:'#4fa1de',irritated:'#ed302a',empty:'#80838e',
+              good:'#48e075',energetic:'#2feada',tired:'#4fa1de',weak:'#80838e',tense:'#e9c14d',pain:'#ed302a'};
+  const EX_MB=[['anxious','tired','calm'],['anxious','tense','anxious'],['calm','good','calm'],['sad','tired','empty'],['anxious','weak','calm']];
+  const cv = $('c'), ctx = cv.getContext('2d'), stage = $('stage');
+  const ta = $('stream'), exhaleBtn = $('exhale'), speech = $('speech'), countEl = $('count');
+
+  /* ---------- sphere: lat/long dot grid, lumpy breathing surface ---------- */
+  let W=0,H=0,R=100,CX=0,CY=0;
+  function resize(){
+    const r = stage.getBoundingClientRect(), d = Math.min(2, devicePixelRatio||1);
+    W=r.width; H=r.height; cv.width=W*d; cv.height=H*d; ctx.setTransform(d,0,0,d,0,0);
+    R = Math.max(64, Math.min(W*0.3, H*0.3, 170)); CX=W/2; CY=H*0.44;
+    const wm=$('wordmark'); wm.style.top=(CY+R*1.42)+'px';
+  }
+  addEventListener('resize', resize);
+  const ROWS=58, COLS=104, pts=[];
+  for(let i=1;i<ROWS;i++){
+    const lat=-Math.PI/2+Math.PI*i/ROWS, y=Math.sin(lat), rr=Math.cos(lat);
+    const cols=Math.max(6, Math.round(COLS*rr));
+    for(let j=0;j<cols;j++){ const lon=2*Math.PI*j/cols; pts.push({x:Math.cos(lon)*rr, y, z:Math.sin(lon)*rr, j:Math.random()}); }
+  }
+  pts.push({x:0,y:1,z:0,j:.5},{x:0,y:-1,z:0,j:.5});
+  // round dot sprite
+  const dot=document.createElement('canvas'); dot.width=dot.height=16;
+  { const c=dot.getContext('2d'); const g=c.createRadialGradient(8,8,0,8,8,8);
+    g.addColorStop(0,'rgba(92,214,176,1)'); g.addColorStop(.55,'rgba(70,184,150,.9)'); g.addColorStop(1,'rgba(70,184,150,0)');
+    c.fillStyle=g; c.fillRect(0,0,16,16); }
+  const TILT=-0.42;
+  function proj(x,y,z,rot){
+    const c=Math.cos(rot), s=Math.sin(rot); const X=x*c+z*s, Z=-x*s+z*c;
+    const ct=Math.cos(TILT), st=Math.sin(TILT); const Y2=y*ct-Z*st, Z2=y*st+Z*ct;
+    const f=3.4/(3.4-Z2/R*0.8); return {sx:CX+X*f, sy:CY-Y2*f, z:Z2};
+  }
+  function lump(x,y,z,T,amp){
+    return amp*( 0.085*Math.sin(2.2*x+T*0.42)
+               + 0.075*Math.sin(2.6*y-T*0.35+1.1)
+               + 0.065*Math.sin(3.0*z+T*0.30+2.3)
+               + 0.050*Math.sin(2.1*x+1.9*y-1.6*z+T*0.55)
+               + 0.030*Math.sin(4.3*x-3.1*z+T*0.8) );
+  }
+  let charge=0, chargeShown=0, pulse=-1e9, exhaleAt=-1e9;
+  const ease=x=>1-Math.pow(1-x,3);
+
+  function frame(ts){
+    const T=(reduce?4000:ts)/1000;
+    chargeShown += (charge-chargeShown)*0.04;
+    ctx.clearRect(0,0,W,H);
+    const pk=Math.max(0,1-(ts-pulse)/700);
+    const ex=(ts-exhaleAt)/1700;
+    let scale=1, burst=0;
+    if(ex>=0 && ex<1){ if(ex<0.2) scale=1-0.16*ease(ex/0.2); else { const k=(ex-0.2)/0.8; burst=k; scale=0.84+0.16*ease(k); } }
+    const busy=Math.min(chargeShown,12);
+    // ambient glow
+    const gA=0.28+busy*0.02+pk*0.18;
+    const g=ctx.createRadialGradient(CX,CY,R*0.4,CX,CY,R*2.6);
+    g.addColorStop(0,'rgba(20,70,52,'+gA.toFixed(3)+')'); g.addColorStop(.5,'rgba(12,40,30,0.18)'); g.addColorStop(1,'rgba(8,10,10,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    // translucent body
+    const bR=R*scale*1.0;
+    const b=ctx.createRadialGradient(CX,CY,bR*0.2,CX,CY,bR*1.12);
+    b.addColorStop(0,'rgba(0,45,29,0.85)'); b.addColorStop(.8,'rgba(0,40,26,0.6)'); b.addColorStop(1,'rgba(0,30,20,0)');
+    ctx.fillStyle=b; ctx.beginPath(); ctx.arc(CX,CY,bR*1.12,0,Math.PI*2); ctx.fill();
+
+    const rot=T*0.09, breath=1+0.03*Math.sin(T*Math.PI*2/12);
+    const amp=1+busy*0.07+pk*0.5;
+    const shake=pk*0.04;
+    for(const p of pts){
+      let d=lump(p.x,p.y,p.z,T,amp) + shake*Math.sin(p.y*9+T*9);
+      let k=R*breath*scale*(1+d);
+      let a=1;
+      if(burst>0){ const o=ease(Math.min(1,burst*1.4)); k*= 1 + o*(0.8+p.j*1.8); a=1-o; }
+      const q=proj(p.x*k,p.y*k,p.z*k,rot);
+      const depth=(q.z/(R*1.2)+1)/2;             // 0 back .. 1 front
+      const alpha=(0.22+depth*0.7)*a;
+      if(alpha<0.02) continue;
+      const sz=(1.5+depth*1.6)*(1+d*1.5);
+      ctx.globalAlpha=alpha;
+      ctx.drawImage(dot,q.sx-sz,q.sy-sz,sz*2,sz*2);
+    }
+    // calm sphere reforming after the exhale
+    if(burst>0){
+      const f=ease(burst);
+      for(let i=0;i<pts.length;i+=2){ const p=pts[i]; const k=R*breath*scale*(1+lump(p.x,p.y,p.z,T,0.6));
+        const q=proj(p.x*k,p.y*k,p.z*k,rot); const depth=(q.z/(R*1.2)+1)/2; const sz=1.5+depth*1.6;
+        ctx.globalAlpha=(0.22+depth*0.7)*f; ctx.drawImage(dot,q.sx-sz,q.sy-sz,sz*2,sz*2); }
+    }
+    ctx.globalAlpha=1;
+    if(!reduce || ts-pulse<800 || (ex>=0&&ex<1)) requestAnimationFrame(frame);
+  }
+  function kick(){ if(reduce) requestAnimationFrame(frame); }
+
+  /* ---------- speech ---------- */
+  function say(big, small){
+    speech.textContent='';
+    const p=document.createElement('p'); p.textContent=big; if(big.length<40) p.className='big'; speech.appendChild(p);
+    if(small){ const s=document.createElement('small'); s.textContent=small; speech.appendChild(s); }
+  }
+
+  /* ---------- stream -> fragments -> into the sphere ---------- */
+  let fragments=[];
+  const MIN=3;
+  function updateCount(){
+    countEl.textContent=L().count(fragments.length);
+    exhaleBtn.disabled = !fragments.length && !ta.value.trim();
+    exhaleBtn.textContent = fragments.length ? L().exhale+' · '+fragments.length : L().exhale;
+  }
+  function absorb(text){
+    text=text.replace(/\s+/g,' ').replace(/^[\s,;:–—-]+|[\s,;:–—-]+$/g,'').trim();
+    if(text.split(' ').length<1 || text.length<MIN) return;
+    fragments.push(text); charge++; updateCount();
+    const r=ta.getBoundingClientRect(), s=stage.getBoundingClientRect();
+    const el=document.createElement('div'); el.className='fly'; el.textContent=text; document.body.appendChild(el);
+    const w=Math.min(220, el.offsetWidth), h=el.offsetHeight;
+    const x0=r.left+Math.min(r.width-w, 12+Math.random()*Math.max(0,r.width-w-24)), y0=r.top+4;
+    const tx=s.left+CX-w/2, ty=s.top+CY-h/2;
+    const side=(Math.random()<.5?-1:1)*(60+Math.random()*80);
+    const done=()=>{ el.remove(); pulse=performance.now(); kick(); };
+    if(reduce){ done(); return; }
+    const anim=el.animate([
+      {transform:`translate(${x0}px,${y0}px) scale(1)`, opacity:0},
+      {transform:`translate(${x0}px,${y0-18}px) scale(1)`, opacity:1, offset:.12},
+      {transform:`translate(${(x0+tx)/2+side}px,${(y0+ty)/2}px) scale(.8)`, opacity:1, offset:.55},
+      {transform:`translate(${tx}px,${ty}px) scale(.12)`, opacity:0}
+    ],{duration:1250, easing:'cubic-bezier(.45,0,.35,1)'});
+    anim.onfinish=done;
+  }
+  // a thought is complete at . ! ? … ; or newline, or after a pause
+  const SPLIT=/[^.!?…;\n]+[.!?…;\n]+/g;
+  let pauseT=null;
+  function harvest(all){
+    const v=ta.value; let taken=0, m; SPLIT.lastIndex=0;
+    const parts=[];
+    while((m=SPLIT.exec(v))){ parts.push(m[0]); taken=SPLIT.lastIndex; }
+    let rest=v.slice(taken);
+    if(all && rest.trim()){ parts.push(rest); rest=''; }
+    if(!parts.length) return;
+    ta.value=rest.replace(/^\s+/,'');
+    parts.forEach((p,i)=>setTimeout(()=>absorb(p), i*260));
+  }
+  ta.addEventListener('input',()=>{
+    harvest(false); updateCount();
+    clearTimeout(pauseT); pauseT=setTimeout(()=>harvest(true), 1800);
+  });
+  ta.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); clearTimeout(pauseT); harvest(true);} });
+
+  /* ---------- demo: simulated stream of speech ---------- */
+  let demoTimer=null;
+  $('demo').onclick=()=>{
+    if(demoTimer) return;
+    ta.focus(); let i=0;
+    say(...L().listening); const DEMO=L().demoText;
+    demoTimer=setInterval(()=>{
+      if(i>=DEMO.length){ clearInterval(demoTimer); demoTimer=null; return; }
+      ta.value+=DEMO[i++]; ta.dispatchEvent(new Event('input'));
+    }, reduce?4:28);
+  };
+
+  /* ---------- storage ---------- */
+  let db=null, uid=null, sample=null;
+  const LS='mind-dumps-v1';
+  (async()=>{
+    try{
+      if(!window.claude||!window.claude.use) return;
+      const [d,u,s]=await Promise.all([claude.use('db'),claude.use('user'),claude.use('sample')]);
+      sample=s||null;
+      if(d&&u){ const id=await u.id(); if(id){ db=d; uid=id; } }
+    }catch(e){}
+  })();
+  async function loadDumps(){
+    if(db&&uid){
+      try{ const snap=await db.collection('data/users/'+uid).orderBy('at','asc').get(); return snap.docs.map(d=>d.data()).filter(Boolean); }catch(e){}
+    }
+    try{ return JSON.parse(localStorage.getItem(LS)||'[]'); }catch(e){ return []; }
+  }
+  async function saveDump(dump){
+    if(db&&uid){ try{ await db.collection('data/users/'+uid).doc('d'+dump.at).set(dump); return; }catch(e){} }
+    try{ const all=JSON.parse(localStorage.getItem(LS)||'[]'); all.push(dump); localStorage.setItem(LS, JSON.stringify(all)); }catch(e){}
+  }
+  const norm=s=>s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
+
+  /* ---------- formulate + sort ---------- */
+  async function formulate(frags, themes){
+    if(sample){
+      try{
+        const res=await sample.json(
+`A person is dumping their thoughts as a stream to clear their head. Below are fragments of what they said.
+Task: formulate the separate thoughts and give each a theme.
+- One thought = one subject. Merge fragments about the same thing, split ones that hold several.
+- Keep each short (up to 8 words), first person, in the person's own words and in the SAME LANGUAGE as the fragments. No advice, no judgement, no conclusions.
+- theme: 1-3 words, a noun, what the thought is about (e.g. "Landlord", "Mom", "Work"), in the same language as the fragments.
+- If the theme matches one of the known themes, reuse that name EXACTLY as written.
+Known themes: ${JSON.stringify(themes)}
+Fragments: ${JSON.stringify(frags)}
+Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
+          {modelTier:'quick'});
+        if(res && Array.isArray(res.thoughts) && res.thoughts.length)
+          return res.thoughts.filter(t=>t&&t.text).map(t=>({text:String(t.text).slice(0,120), theme:String(t.theme||t.text).slice(0,40)}));
+      }catch(e){}
+    }
+    // local fallback: each fragment is a thought, theme = matching known theme or its first words
+    return frags.map(f=>{
+      const nf=norm(f); const hit=themes.find(t=>nf.includes(norm(t)));
+      return {text:f, theme: hit || f.split(/\s+/).slice(0,3).join(' ')};
+    });
+  }
+
+  exhaleBtn.onclick=async()=>{
+    clearTimeout(pauseT); harvest(true);
+    await new Promise(r=>setTimeout(r, reduce?0:900));
+    if(!fragments.length) return;
+    const frags=fragments.slice(); fragments=[]; updateCount();
+    exhaleAt=performance.now(); charge=0; kick();
+    exhaleBtn.disabled=true;
+    say(...L().sorting);
+    const past=await loadDumps();
+    const themes=[...new Set(past.flatMap(d=>(d.thoughts||[]).map(t=>t.theme)))].slice(-80);
+    const pending=formulate(frags, themes);
+    await new Promise(r=>setTimeout(r, reduce?0:1500));
+    const moodAfter=await ask('mood', '', 'afterQ');
+    const thoughts=await pending;
+    const mood=session.mood, body=session.body;
+    const known=new Set(themes.map(norm));
+    const repeats=thoughts.filter(t=>known.has(norm(t.theme))).length;
+    const dump={at:Date.now(), thoughts}; if(mood) dump.mood=mood; if(body) dump.body=body; if(moodAfter) dump.moodAfter=moodAfter;
+    await saveDump(dump);
+    lastSaved=[thoughts.length, repeats];
+    showSaved();
+  };
+  let lastSaved=null;
+  function showSaved(){
+    rerender=showSaved;
+    say(...L().saved(...lastSaved));
+    $('field-wrap').hidden=true; exhaleBtn.hidden=true; $('demo').hidden=true; $('again').hidden=false;
+    updateCount();
+  }
+  $('again').onclick=()=>{ $('again').hidden=true; $('field-wrap').hidden=false; exhaleBtn.hidden=false; $('demo').hidden=false; startSession(); };
+  let rerender=()=>{}, session={mood:null, body:null};
+  function ask(kind, step, qKey){
+    return new Promise(resolve=>{
+      let chosen=false;
+      const draw=()=>{
+      const t=L(), q=t[qKey||(kind==='mood'?'moodQ':'bodyQ')];
+      say(q[0], q[1]);
+      $('field-wrap').hidden=true; $('actions').hidden=true; $('checkin').hidden=false;
+      $('step').textContent=step; $('step').hidden=!step;
+      const box=$('chips'); box.textContent='';
+      const finish=v=>{ $('checkin').hidden=true; $('field-wrap').hidden=false; $('actions').hidden=false; resolve(v); };
+      Object.entries(t[kind]).forEach(([k,label])=>{
+        const b=document.createElement('button'); b.type='button'; b.className='chip'; b.setAttribute('aria-pressed','false');
+        const i=document.createElement('i'); i.style.background=TONE[k]; b.appendChild(i); b.append(label);
+        b.onclick=()=>{ b.setAttribute('aria-pressed','true'); pulse=performance.now(); kick(); setTimeout(()=>finish(k), reduce?0:260); };
+        box.appendChild(b);
+      });
+      $('skip').onclick=()=>finish(null);
+      };
+      rerender=draw; draw();
+      const first=$('chips').firstChild; if(first) first.focus({preventScroll:true});
+    });
+  }
+  function showAsk(){ rerender=showAsk; say(L().ask, L().askSub); updateCount(); }
+  async function startSession(){
+    session.mood=await ask('mood','1 / 2');
+    session.body=await ask('body','2 / 2');
+    showAsk(); ta.focus({preventScroll:true});
+  }
+  function plural(n,a,b,c){ const m=n%10, h=n%100; return m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c); }
+
+  /* ---------- stats ---------- */
+  const DAY=864e5, now0=Date.now();
+  const example=()=>L().example.map((d,i)=>({at:now0-(9-i*2)*DAY, thoughts:d.map(([text,theme])=>({text,theme})), mood:EX_MB[i][0], body:EX_MB[i][1], moodAfter:EX_MB[i][2]}));
+  function render(dumps, isExample){
+    const list=$('stats-list'), once=$('once'); list.textContent=''; once.textContent='';
+    const total=dumps.reduce((s,d)=>s+(d.thoughts||[]).length,0);
+    $('stats-meta').textContent = L().meta(isExample, dumps.length, total);
+    $('stats-note').textContent = isExample ? L().noteEx : L().note;
+    const tally=(key,el)=>{ const c={}; dumps.forEach(d=>{ if(d[key]) c[d[key]]=(c[d[key]]||0)+1; }); el.textContent='';
+      const e=Object.entries(c).sort((a,b)=>b[1]-a[1]);
+      if(!e.length){ const sp=document.createElement('span'); sp.textContent='—'; el.appendChild(sp); }
+      e.forEach(([k,n])=>{ const sp=document.createElement('span'); const i=document.createElement('i'); i.style.background=TONE[k]||'#80838e'; const b=document.createElement('b'); b.textContent='×'+n; sp.append(i, (L()[key][k]||k)+' ', b); el.appendChild(sp); }); };
+    tally('mood',$('mood-tally')); tally('body',$('body-tally'));
+    { const c={}; dumps.forEach(d=>{ if(d.moodAfter) c[d.moodAfter]=(c[d.moodAfter]||0)+1; }); const el=$('after-tally'); el.textContent='';
+      const e=Object.entries(c).sort((a,b)=>b[1]-a[1]); if(!e.length){ const sp=document.createElement('span'); sp.textContent='—'; el.appendChild(sp); }
+      e.forEach(([k,n])=>{ const sp=document.createElement('span'); const i=document.createElement('i'); i.style.background=TONE[k]; const b=document.createElement('b'); b.textContent='×'+n; sp.append(i, L().mood[k]+' ', b); el.appendChild(sp); }); }
+    { const c={}; dumps.forEach(d=>{ if(d.mood&&d.moodAfter){ const k=d.mood+'>'+d.moodAfter; c[k]=(c[k]||0)+1; } }); const el=$('shift-tally'); el.textContent='';
+      const e=Object.entries(c).sort((a,b)=>b[1]-a[1]); if(!e.length){ const sp=document.createElement('span'); sp.textContent='—'; el.appendChild(sp); }
+      e.forEach(([k,n])=>{ const [a,b2]=k.split('>'); const sp=document.createElement('span'); const i1=document.createElement('i'); i1.style.background=TONE[a]; const i2=document.createElement('i'); i2.style.background=TONE[b2]; const b=document.createElement('b'); b.textContent='×'+n;
+        sp.append(i1, L().mood[a]+(a===b2?' · '+L().same+' ':' → '), ...(a===b2?[]:[i2, L().mood[b2]+' ']), b); el.appendChild(sp); }); }
+    const map=new Map();
+    dumps.forEach((d,di)=>(d.thoughts||[]).forEach(t=>{
+      const k=norm(t.theme||t.text); if(!k) return;
+      const e=map.get(k)||{theme:t.theme||t.text, n:0, dumps:new Set(), last:''};
+      e.n++; e.dumps.add(di); e.last=t.text; map.set(k,e);
+    }));
+    const all=[...map.values()].sort((a,b)=>b.dumps.size-a.dumps.size||b.n-a.n);
+    const rep=all.filter(e=>e.dumps.size>1), single=all.filter(e=>e.dumps.size<=1);
+    const shown=dumps.slice(-14), off=dumps.length-shown.length;
+    rep.forEach(e=>{
+      const row=document.createElement('div'); row.className='rowt';
+      row.innerHTML='<span class="t"></span><span class="n"></span><span class="c"></span><span class="strip" aria-hidden="true"></span>';
+      row.querySelector('.t').textContent=e.theme;
+      row.querySelector('.n').textContent='×'+e.dumps.size;
+      const mc={}; e.dumps.forEach(i=>{ const m=dumps[i].mood; if(m) mc[m]=(mc[m]||0)+1; });
+      const top=Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
+      row.querySelector('.c').textContent=L().last+e.last + (top? ' · '+L().mostly+L().mood[top[0]].toLowerCase() : '');
+      const st=row.querySelector('.strip');
+      shown.forEach((_,i)=>{ const dot=document.createElement('i'); if(e.dumps.has(i+off)) dot.className='on'; st.appendChild(dot); });
+      row.setAttribute('aria-label', L().aria(e.theme, e.dumps.size));
+      list.appendChild(row);
+    });
+    if(!rep.length){ const p=document.createElement('p'); p.className='note'; p.textContent=L().noRepeats; list.appendChild(p); }
+    $('once-label').hidden=!single.length;
+    single.forEach(e=>{ const s=document.createElement('span'); s.textContent=e.theme; once.appendChild(s); });
+  }
+  $('open-stats').onclick=async()=>{
+    const d=await loadDumps();
+    render(d.length?d:example(), !d.length);
+    $('panel').classList.add('open'); $('close-stats').focus();
+  };
+  $('close-stats').onclick=()=>{ $('panel').classList.remove('open'); $('open-stats').focus(); };
+  addEventListener('keydown',e=>{ if(e.key==='Escape') $('panel').classList.remove('open'); });
+
+  /* ---------- voice ---------- */
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const micBtn=$('mic'); let rec=null, listening=false;
+  if(SR){
+    micBtn.hidden=false;
+    micBtn.onclick=()=>{ listening?stopMic():startMic(); };
+  }
+  function startMic(){
+    rec=new SR(); rec.lang=L().speech; rec.continuous=true; rec.interimResults=false;
+    rec.onresult=e=>{
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(!e.results[i].isFinal) continue;
+        let t=e.results[i][0].transcript.trim(); if(!t) continue;
+        if(!/[.!?…]$/.test(t)) t+='.';               // each spoken phrase = one thought
+        ta.value=(ta.value?ta.value.replace(/\s*$/,' '):'')+t+' ';
+        ta.dispatchEvent(new Event('input'));
+      }
+    };
+    rec.onerror=e=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed'){ say(L().micDenied); } };
+    rec.onend=()=>{ if(listening){ try{rec.start();}catch(e){} } };
+    try{ rec.start(); listening=true; micBtn.setAttribute('aria-pressed','true'); say(L().ask, L().micOn); }catch(e){}
+  }
+  function stopMic(){ listening=false; micBtn.setAttribute('aria-pressed','false'); try{rec&&rec.stop();}catch(e){} }
+  exhaleBtn.addEventListener('click', ()=>{ if(listening) stopMic(); }, true);
+
+  let lastDumps=null;
+  function applyLang(){
+    const t=L(); document.documentElement.lang=lang; document.title=t.title;
+    document.querySelectorAll('[data-t]').forEach(el=>{ el.textContent=t[el.dataset.t]; });
+    ta.placeholder=t.placeholder; $('mic').setAttribute('aria-label', t.micLabel); if(listening){ stopMic(); }
+    const wm=$('wordmark'); wm.textContent=''; wm.setAttribute('aria-label', t.title);
+    const [dim,lit]=t.name; let i=0;
+    [...dim].forEach(ch=>{ const sp=document.createElement('span'); sp.className='dim'; sp.textContent=ch; wm.appendChild(sp); });
+    [...lit].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; sp.style.animationDelay=(i++*0.3)+'s'; wm.appendChild(sp); });
+    document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.lang===lang?'true':'false'));
+    rerender(); updateCount();
+    if($('panel').classList.contains('open')) $('open-stats').click();
+  }
+  document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; try{localStorage.setItem('exhale-lang',lang);}catch(e){} applyLang(); });
+  applyLang();
+  startSession();
+  resize(); updateCount(); requestAnimationFrame(frame);
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+</script>
+</body>
+</html>
