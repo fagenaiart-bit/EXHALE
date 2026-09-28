@@ -44,6 +44,11 @@
   button:focus-visible, textarea:focus-visible{outline:2px solid var(--aqua-600); outline-offset:3px;}
   .stage{position:relative; flex:1; min-height:0;}
   canvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .stage.voice{cursor:default;}
+  .stage.voice.hot{cursor:pointer;}
+  .stage:focus-visible{outline:none;}
+  .stage:focus-visible canvas{outline:2px solid var(--aqua-600); outline-offset:-8px; border-radius:24px;}
+  .speech small.live{color:var(--aqua-400); font-size:15px; line-height:22px; min-height:22px;}
   .wordmark{position:absolute; left:50%; transform:translate(-50%,-50%); display:flex; gap:.62em; font:600 22px/1 var(--font-mono); pointer-events:none; z-index:1;}
   .wordmark span{color:#4a5452; animation:sweep 4.8s ease-in-out infinite;}
   .wordmark span.dim{animation:none; color:#4a5452;}
@@ -59,10 +64,6 @@
   .field-wrap:focus-within{border-color:var(--jade-300);}
   .field-wrap{display:flex; align-items:flex-end; gap:10px;}
   .field-wrap textarea{flex:1; min-width:0;}
-  .mic{flex:none; width:44px; height:44px; border-radius:999px; border:1px solid var(--aqua-600); background:transparent; color:var(--aqua-600); display:grid; place-items:center; cursor:pointer; transition:box-shadow .1s, background .1s, color .1s;}
-  .mic[aria-pressed="true"]{background:var(--aqua-400); border-color:var(--aqua-400); color:var(--bg-deep); box-shadow:var(--glow-aqua); animation:live 1.6s ease-in-out infinite;}
-  @keyframes live{50%{box-shadow:0 0 36px 4px #2feada55}}
-  @media (prefers-reduced-motion: reduce){ .mic[aria-pressed="true"]{animation:none;} }
   textarea{display:block; width:100%; box-sizing:border-box; resize:none; background:transparent; border:0; outline:0; color:var(--text-primary); font:400 16px/24px var(--font-sans); min-height:48px; max-height:120px;}
   textarea::placeholder{color:var(--text-muted);}
   .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center;}
@@ -124,7 +125,7 @@
     </div>
   </div>
 
-  <div class="stage" id="stage"><canvas id="c" aria-hidden="true"></canvas><div class="wordmark" id="wordmark"></div></div>
+  <div class="stage" id="stage" tabindex="-1"><canvas id="c" aria-hidden="true"></canvas><div class="wordmark" id="wordmark"></div></div>
 
   <div class="speech" id="speech" aria-live="polite">
 
@@ -139,7 +140,6 @@
     <div class="field-wrap" id="field-wrap">
       <label class="sr" for="stream" data-t="fieldLabel"></label>
       <textarea id="stream" rows="2" ></textarea>
-      <button class="mic" id="mic" type="button" aria-pressed="false" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     </div>
     <div class="actions" id="actions">
       <button class="primary" id="exhale" type="button" disabled></button>
@@ -191,7 +191,7 @@
       meta:(ex,d,t)=>(ex?'Приклад · ':'За весь час · ')+d+' '+pluralUk(d,'видих','видихи','видихів')+' · '+t+' '+pluralUk(t,'думка','думки','думок'),
       noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
       note:'Лише рахунок. Думки, які поверталися в різні видихи, стоять угорі.',
-      micOn:'Говори. Кожне речення полетить у сферу.', micOff:'Мікрофон вимкнено.', micLabel:'Говорити голосом', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
+      micOn:'Слухаю українською. Кожна фраза полетить у сферу. Торкнись сфери ще раз, щоб зупинити.', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори. Або пиши нижче.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
       again:'Новий видих', moodBefore:'Настрій до', moodAfterT:'Настрій після', shiftT:'Як змінився настрій', same:'без змін', bodyTitle:'Тіло', mostly:'Найчастіше: ',
       mood:{calm:'Спокійно',joy:'Радісно',anxious:'Тривожно',sad:'Сумно',irritated:'Роздратовано',empty:'Порожньо'},
@@ -215,7 +215,7 @@
       meta:(ex,d,t)=>(ex?'Example · ':'All time · ')+d+' '+(d===1?'exhale':'exhales')+' · '+t+' '+(t===1?'thought':'thoughts'),
       noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
       note:'Counts only. Thoughts that returned across different exhales are at the top.',
-      micOn:'Talk. Every sentence will fly into the sphere.', micOff:'Mic is off.', micLabel:'Speak', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
+      micOn:'Listening in English. Every phrase flies into the sphere. Tap the sphere again to stop.', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk. Or type below.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
       again:'New exhale', moodBefore:'Mood before', moodAfterT:'Mood after', shiftT:'How the mood shifted', same:'no change', bodyTitle:'Body', mostly:'Mostly ',
       mood:{calm:'Calm',joy:'Happy',anxious:'Anxious',sad:'Sad',irritated:'Irritated',empty:'Empty'},
@@ -272,18 +272,24 @@
                + 0.050*Math.sin(2.1*x+1.9*y-1.6*z+T*0.55)
                + 0.030*Math.sin(4.3*x-3.1*z+T*0.8) );
   }
-  let charge=0, chargeShown=0, pulse=-1e9, exhaleAt=-1e9;
+  let charge=0, chargeShown=0, pulse=-1e9, exhaleAt=-1e9, listenLvl=0, listenShown=0;
   const ease=x=>1-Math.pow(1-x,3);
 
   function frame(ts){
     const T=(reduce?4000:ts)/1000;
-    chargeShown += (charge-chargeShown)*0.04;
+    chargeShown += (charge-chargeShown)*0.04; listenShown += (listenLvl-listenShown)*0.06;
     ctx.clearRect(0,0,W,H);
     const pk=Math.max(0,1-(ts-pulse)/700);
     const ex=(ts-exhaleAt)/1700;
     let scale=1, burst=0;
     if(ex>=0 && ex<1){ if(ex<0.2) scale=1-0.16*ease(ex/0.2); else { const k=(ex-0.2)/0.8; burst=k; scale=0.84+0.16*ease(k); } }
     const busy=Math.min(chargeShown,12);
+    if(listenShown>0.01){
+      const h=ctx.createRadialGradient(CX,CY,R*0.9,CX,CY,R*1.9);
+      const la=(0.10+0.06*Math.sin(T*2.4))*listenShown;
+      h.addColorStop(0,'rgba(47,234,218,'+la.toFixed(3)+')'); h.addColorStop(1,'rgba(47,234,218,0)');
+      ctx.fillStyle=h; ctx.fillRect(0,0,W,H);
+    }
     // ambient glow
     const gA=0.28+busy*0.02+pk*0.18;
     const g=ctx.createRadialGradient(CX,CY,R*0.4,CX,CY,R*2.6);
@@ -319,7 +325,7 @@
         ctx.globalAlpha=(0.22+depth*0.7)*f; ctx.drawImage(dot,q.sx-sz,q.sy-sz,sz*2,sz*2); }
     }
     ctx.globalAlpha=1;
-    if(!reduce || ts-pulse<800 || (ex>=0&&ex<1)) requestAnimationFrame(frame);
+    if(!reduce || ts-pulse<800 || (ex>=0&&ex<1) || Math.abs(listenLvl-listenShown)>0.01) requestAnimationFrame(frame);
   }
   function kick(){ if(reduce) requestAnimationFrame(frame); }
 
@@ -472,6 +478,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   function ask(kind, step, qKey){
     return new Promise(resolve=>{
       let chosen=false;
+      if(typeof stopMic==='function') stopMic();
       const draw=()=>{
       const t=L(), q=t[qKey||(kind==='mood'?'moodQ':'bodyQ')];
       say(q[0], q[1]);
@@ -491,7 +498,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       const first=$('chips').firstChild; if(first) first.focus({preventScroll:true});
     });
   }
-  function showAsk(){ rerender=showAsk; say(L().ask, L().askSub); updateCount(); }
+  function showAsk(){ rerender=showAsk; say(L().ask, (window.SpeechRecognition||window.webkitSpeechRecognition)? L().tapSphere : L().askSub); updateCount(); }
   async function startSession(){
     session.mood=await ask('mood','1 / 2');
     session.body=await ask('body','2 / 2');
@@ -553,36 +560,77 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   $('close-stats').onclick=()=>{ $('panel').classList.remove('open'); $('open-stats').focus(); };
   addEventListener('keydown',e=>{ if(e.key==='Escape') $('panel').classList.remove('open'); });
 
-  /* ---------- voice ---------- */
+  /* ---------- voice: tap the sphere ---------- */
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const micBtn=$('mic'); let rec=null, listening=false;
-  if(SR){
-    micBtn.hidden=false;
-    micBtn.onclick=()=>{ listening?stopMic():startMic(); };
+  let rec=null, listening=false, lastFinal='', lastFinalAt=0, restartT=null;
+  const nrm=t=>t.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
+  function liveLine(text){
+    speech.textContent='';
+    const p=document.createElement('p'); p.className='big'; p.textContent=L().listenTitle; speech.appendChild(p);
+    const sm=document.createElement('small'); sm.className='live'; sm.textContent=text||''; speech.appendChild(sm);
+    if(!text){ const h=document.createElement('small'); h.textContent=L().micOn; speech.appendChild(h); }
+  }
+  function commit(raw){
+    let t=raw.replace(/\s+/g,' ').trim(); if(!t) return;
+    const nt=nrm(t), now=Date.now();
+    if(now-lastFinalAt<8000 && lastFinal){
+      if(nt===lastFinal || lastFinal.startsWith(nt)) return;            // repeated result
+      if(nt.startsWith(lastFinal)){ t=t.split(/\s+/).slice(lastFinal.split(' ').length).join(' '); if(!t.trim()) return; } // cumulative result
+    }
+    lastFinal=nt; lastFinalAt=now;
+    absorb(t.charAt(0).toUpperCase()+t.slice(1));
   }
   function startMic(){
-    rec=new SR(); rec.lang=L().speech; rec.continuous=true; rec.interimResults=false;
-    rec.onresult=e=>{
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        if(!e.results[i].isFinal) continue;
-        let t=e.results[i][0].transcript.trim(); if(!t) continue;
-        if(!/[.!?…]$/.test(t)) t+='.';               // each spoken phrase = one thought
-        ta.value=(ta.value?ta.value.replace(/\s*$/,' '):'')+t+' ';
-        ta.dispatchEvent(new Event('input'));
-      }
-    };
-    rec.onerror=e=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed'){ say(L().micDenied); } };
-    rec.onend=()=>{ if(listening){ try{rec.start();}catch(e){} } };
-    try{ rec.start(); listening=true; micBtn.setAttribute('aria-pressed','true'); say(L().ask, L().micOn); }catch(e){}
+    if(!SR){ say(L().ask, L().noVoice); return; }
+    listening=true; listenLvl=1; liveLine('');
+    stage.setAttribute('aria-pressed','true');
+    runRec();
   }
-  function stopMic(){ listening=false; micBtn.setAttribute('aria-pressed','false'); try{rec&&rec.stop();}catch(e){} }
-  exhaleBtn.addEventListener('click', ()=>{ if(listening) stopMic(); }, true);
+  function runRec(){
+    try{ rec&&rec.abort(); }catch(e){}
+    rec=new SR();
+    rec.lang=L().speech;          // explicit: uk-UA or en-US
+    rec.continuous=false;         // one utterance per session: fewer duplicates on Android and iOS
+    rec.interimResults=true;
+    rec.maxAlternatives=1;
+    rec.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const r=e.results[i];
+        if(r.isFinal){ commit(r[0].transcript); liveLine(''); }
+        else interim+=r[0].transcript;
+      }
+      if(interim){ liveLine(interim); voiceKick(); }
+    };
+    rec.onerror=e=>{
+      if(e.error==='not-allowed'||e.error==='service-not-allowed'||e.error==='audio-capture'){ stopMic(); say(L().ask, L().micDenied); }
+    };
+    rec.onend=()=>{ if(listening){ clearTimeout(restartT); restartT=setTimeout(runRec, 150); } };
+    try{ rec.start(); }catch(e){}
+  }
+  function stopMic(){
+    if(!listening) return;
+    listening=false; listenLvl=0; clearTimeout(restartT);
+    stage.setAttribute('aria-pressed','false');
+    try{ rec&&rec.stop(); }catch(e){}
+    if(rerender===showAsk) showAsk();
+  }
+  function voiceKick(){ pulse=performance.now()-350; kick(); }
+  const onSphere=(x,y)=>{ const r=stage.getBoundingClientRect(); return Math.hypot(x-r.left-CX, y-r.top-CY) < R*1.3; };
+  if(SR){
+    stage.classList.add('voice');
+    stage.setAttribute('role','button'); stage.tabIndex=0;
+    stage.addEventListener('pointermove', e=>stage.classList.toggle('hot', onSphere(e.clientX,e.clientY)));
+    stage.addEventListener('click', e=>{ if(!onSphere(e.clientX,e.clientY) || rerender!==showAsk) return; listening?stopMic():startMic(); });
+    stage.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && rerender===showAsk){ e.preventDefault(); listening?stopMic():startMic(); } });
+  }
+  exhaleBtn.addEventListener('click', ()=>{ stopMic(); }, true);
 
   let lastDumps=null;
   function applyLang(){
     const t=L(); document.documentElement.lang=lang; document.title=t.title;
     document.querySelectorAll('[data-t]').forEach(el=>{ el.textContent=t[el.dataset.t]; });
-    ta.placeholder=t.placeholder; $('mic').setAttribute('aria-label', t.micLabel); if(listening){ stopMic(); }
+    ta.placeholder=t.placeholder; stage.setAttribute('aria-label', t.micLabel); stopMic();
     const wm=$('wordmark'); wm.textContent=''; wm.setAttribute('aria-label', t.title);
     const [dim,lit]=t.name; let i=0;
     [...dim].forEach(ch=>{ const sp=document.createElement('span'); sp.className='dim'; sp.textContent=ch; wm.appendChild(sp); });
