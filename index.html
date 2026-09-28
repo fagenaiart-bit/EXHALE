@@ -33,6 +33,7 @@
     --font-sans:"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
     --font-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
+  [hidden]{display:none!important;}
   html,body{height:100%;}
   body{margin:0; background:var(--bg-canvas); color:var(--text-primary); font-family:var(--font-sans); overflow:hidden; -webkit-font-smoothing:antialiased;}
   .app{position:relative; height:100%; display:flex; flex-direction:column;
@@ -116,8 +117,69 @@
   .privacy p{margin:0; font-size:13px; line-height:18px; color:var(--text-muted);}
   .danger{font:600 13px/18px var(--font-sans); color:var(--text-secondary); background:transparent; border:1px solid var(--border-hairline); border-radius:999px; padding:8px 14px; cursor:pointer;}
   .danger.armed{border-color:#ed302a; color:#ecf2f4; box-shadow:0 0 22px 0 #ed302a40;}
+  /* check-in tiles */
+  .chips{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; max-width:420px;}
+  .chip{flex-direction:column; justify-content:center; gap:8px; padding:14px 8px; border-radius:16px; font-size:14px; line-height:18px; font-weight:500; min-height:84px;}
+  .chip svg{width:26px; height:26px; flex:none;}
+  .chip[aria-pressed="true"]{border-color:currentColor;}
+  .checkin{transition:opacity .22s, transform .22s;}
+  .checkin.leaving{opacity:0; transform:translateY(8px); pointer-events:none;}
+  .ico{display:inline-block; width:16px; height:16px; vertical-align:-3px; flex:none;}
+  /* brand in top bar (phones) */
+  .brand{display:none; gap:.5em; font:600 14px/1 var(--font-mono);}
+  .brand span{color:#4a5452;} .brand span.on{color:#6ff5e6; text-shadow:0 0 10px #2feada66;}
+  /* panel: tabs, diary, analytics */
+  .tabs, .seg{display:flex; gap:4px; padding:3px; border:1px solid var(--border-hairline); border-radius:999px; width:max-content; max-width:100%;}
+  .tabs button, .seg button{font:600 14px/20px var(--font-sans); color:var(--text-muted); background:transparent; border:0; border-radius:999px; padding:8px 16px; cursor:pointer;}
+  .seg button{font-size:13px; padding:6px 12px;}
+  .tabs button[aria-selected="true"], .seg button[aria-pressed="true"]{background:var(--surface-raised); color:var(--text-primary);}
+  .wrap{max-width:640px; margin:0 auto;}
+  .tabbar{max-width:640px; margin:0 auto 20px;}
+  .entry{padding:16px 0; border-top:1px solid var(--border-hairline); display:flex; flex-direction:column; gap:10px;}
+  .entry-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .entry-head time{font:500 13px/18px var(--font-mono); color:var(--text-muted); font-variant-numeric:tabular-nums;}
+  .moods{display:flex; align-items:center; gap:6px; font-size:13px; line-height:18px; color:var(--text-secondary);}
+  .moods .arrow{color:var(--text-faint);}
+  .entry ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px;}
+  .entry li{font-size:16px; line-height:25px; color:var(--text-primary); overflow-wrap:anywhere;}
+  .dayhead{font-size:20px; line-height:26px; font-weight:600; margin:28px 0 4px;}
+  .dayhead:first-child{margin-top:0;}
+  .empty{font-size:15px; line-height:22px; color:var(--text-muted); padding:24px 0;}
+  .kpis{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:16px 0 8px;}
+  .kpi{background:var(--surface-raised); border:1px solid var(--border-hairline); border-radius:14px; padding:14px 16px;}
+  .kpi b{display:block; font:500 26px/30px var(--font-mono); color:var(--text-primary); font-variant-numeric:tabular-nums;}
+  .kpi span{font-size:13px; line-height:18px; color:var(--text-muted);}
+  .sec{margin-top:28px;}
+  .sec > .overline{margin-bottom:12px;}
+  .bars{display:flex; flex-direction:column; gap:10px;}
+  .bar{display:grid; grid-template-columns:132px 1fr 36px; align-items:center; gap:12px; font-size:14px; line-height:20px; color:var(--text-secondary);}
+  .bar .lab{display:flex; align-items:center; gap:8px; min-width:0;}
+  .bar .track{display:block; height:8px; border-radius:999px; background:var(--surface-sunk); overflow:hidden;}
+  .bar .fill{display:block; height:100%; border-radius:999px;}
+  .bar b{font:500 13px/18px var(--font-mono); color:var(--text-primary); text-align:right; font-variant-numeric:tabular-nums;}
+  .shift{font-size:16px; line-height:25px; color:var(--text-primary); margin:0;}
+  .days{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px;}
+  .dcell{border:1px solid var(--border-hairline); border-radius:12px; padding:8px 4px; display:flex; flex-direction:column; align-items:center; gap:6px; min-height:74px; background:var(--surface-sunk);}
+  .dcell.has{background:var(--surface-raised);}
+  .dcell small{font:500 11px/14px var(--font-mono); color:var(--text-muted); letter-spacing:.04em;}
+  .dcell .ico{width:18px; height:18px;}
+  .dcell.none .ico{opacity:0;}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:var(--text-muted);}
+  .copybox{margin-top:28px; padding:16px; border:1px solid var(--border-hairline); border-radius:14px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
+  .copybox p{margin:0; font-size:13px; line-height:18px; color:var(--text-muted);}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
+  @media (max-width:640px){
+    .stage{position:absolute; inset:0; z-index:0;}
+    .top,.speech,.dock{z-index:2;}
+    .app::after{content:""; position:absolute; left:0; right:0; bottom:0; height:52%; z-index:1; pointer-events:none;
+      background:linear-gradient(to bottom, rgba(8,10,10,0) 0%, rgba(8,10,10,.72) 38%, rgba(8,10,10,.94) 70%);}
+    .speech{margin-top:auto; text-shadow:0 1px 12px #080a0a;}
+    .wordmark{display:none;}
+    .brand{display:flex;}
+    #count{display:none;}
+    .bar{grid-template-columns:112px 1fr 30px;}
+  }
 </style>
 
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}html{height:100%}body{height:100%}</style>
@@ -125,13 +187,14 @@
 <body>
 <div class="app" id="app">
   <div class="top">
+    <span class="brand" id="brand" aria-hidden="true"></span>
     <span class="overline" id="count"></span>
     <div class="top-right">
       <div class="lang" role="group" aria-label="Мова / Language">
         <button type="button" data-lang="uk" aria-pressed="true">UA</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
       </div>
-      <button class="ghost" id="open-stats" type="button" data-t="repeats"></button>
+      <button class="ghost" id="open-stats" type="button" data-t="journal"></button>
     </div>
   </div>
 
@@ -162,24 +225,17 @@
     <div class="panel-head">
       <div>
         <div class="overline" id="stats-meta"></div>
-        <h2 id="stats-title" data-t="repeats"></h2>
+        <h2 id="stats-title" data-t="journal"></h2>
       </div>
       <button class="ghost" id="close-stats" type="button" data-t="back"></button>
     </div>
     <div class="panel-body">
-      <p class="note" id="stats-note"></p>
-      <div class="overline group-label" data-t="moodBefore" style="margin-top:0"></div>
-      <div class="tally" id="mood-tally"></div>
-      <div class="overline group-label" data-t="moodAfterT"></div>
-      <div class="tally" id="after-tally"></div>
-      <div class="overline group-label" data-t="shiftT"></div>
-      <div class="tally" id="shift-tally"></div>
-      <div class="overline group-label" data-t="bodyTitle"></div>
-      <div class="tally" id="body-tally"></div>
-      <div class="overline group-label" data-t="wordsT"></div>
-      <div class="list" id="stats-list"></div>
-      <div class="overline group-label" data-t="historyT"></div>
-      <div class="history" id="history"></div>
+      <div class="tabbar"><div class="tabs" role="tablist">
+        <button type="button" role="tab" id="tab-diary" aria-selected="true" data-t="diary"></button>
+        <button type="button" role="tab" id="tab-an" aria-selected="false" data-t="analytics"></button>
+      </div></div>
+      <div class="wrap" id="diary"></div>
+      <div class="wrap" id="analytics" hidden></div>
       <div class="privacy">
         <p data-t="privacy"></p>
         <button class="danger" id="wipe" type="button" data-t="wipe"></button>
@@ -202,11 +258,21 @@
       listening:['Слухаю.','Так виглядає потік, коли говориш, не зупиняючись.'],
       sorting:['Видих.','Голова чиста. Розкладаю думки по місцях.'],
       saved:(n,r)=>['Видих.', `Збережено ${n} ${pluralUk(n,'думку','думки','думок')}.`+(r?` ${r} з них уже приходили раніше.`:' Усе нове.')],
-      meta:(ex,d,t)=>(ex?'Приклад · ':'За весь час · ')+d+' '+pluralUk(d,'видих','видихи','видихів')+' · '+t+' '+pluralUk(t,'думка','думки','думок'),
+      meta:(ex,d,t)=>(ex?'Приклад · ':'')+d+' '+pluralUk(d,'видих','видихи','видихів')+' · '+t+' '+pluralUk(t,'думка','думки','думок'),
       noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
       note:'Лише рахунок, без порад.',
       micOn:'Слухаю українською. Кожна фраза полетить у сферу. Торкнись сфери ще раз, щоб зупинити.', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори. Або пиши нижче.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
+      journal:'Щоденник', diary:'Записи', analytics:'Аналітика', week:'Тиждень', month:'Місяць', all:'Весь час',
+      today:'Сьогодні', yesterday:'Вчора', noEntries:'За цей період записів немає.',
+      kExhales:'видихів', kThoughts:'думок', kDays:'днів з записом',
+      moodBeforeT:'Настрій до видиху', moodAfterT2:'Настрій після', bodyT:'Тіло', dayByDay:'День за днем',
+      legMood:'верхня іконка: настрій до', legBody:'нижня: тіло',
+      shiftLine:(b,s,w,n)=>`Після видиху настрій покращився ${b} ${pluralUk(b,'раз','рази','разів')} з ${n}, не змінився ${s}, погіршився ${w}.`,
+      copyT:'Глибший аналіз', copyNote:'Скопіюй записи за цей період і встав у Claude або інший асистент. Нічого не надсилається автоматично.',
+      copyBtn:'Скопіювати записи', copied:'Скопійовано', copyFail:'Не вдалося скопіювати. Виділи текст вручну.',
+      copyPrompt:'Ось мій щоденник думок, настрою і стану тіла. Подивись, які теми повторюються, як вони пов\'язані з настроєм і тілом, і що змінюється після видиху. Без оцінок і без порад, тільки спостереження.',
+      periodLabel:{week:'за тиждень',month:'за місяць',all:'за весь час'},
       wordsT:'Слова, що повертаються', historyT:'Усі видихи',
       privacy:'Думки зберігаються тільки в цьому браузері на цьому пристрої. Їх не бачить ніхто, навіть з тим самим посиланням.',
       wipe:'Видалити всі думки', wipeSure:'Точно? Натисни ще раз', wiped:'Видалено.',
@@ -230,11 +296,21 @@
       listening:['Listening.','This is what a stream looks like when you just keep talking.'],
       sorting:['Exhale.','Your head is clear. Sorting the thoughts now.'],
       saved:(n,r)=>['Exhale.', `Saved ${n} ${n===1?'thought':'thoughts'}.`+(r?` ${r} of them came up before.`:' All new.')],
-      meta:(ex,d,t)=>(ex?'Example · ':'All time · ')+d+' '+(d===1?'exhale':'exhales')+' · '+t+' '+(t===1?'thought':'thoughts'),
+      meta:(ex,d,t)=>(ex?'Example · ':'')+d+' '+(d===1?'exhale':'exhales')+' · '+t+' '+(t===1?'thought':'thoughts'),
       noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
       note:'Counts only, no advice.',
       micOn:'Listening in English. Every phrase flies into the sphere. Tap the sphere again to stop.', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk. Or type below.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
+      journal:'Journal', diary:'Entries', analytics:'Analytics', week:'Week', month:'Month', all:'All time',
+      today:'Today', yesterday:'Yesterday', noEntries:'No entries for this period.',
+      kExhales:'exhales', kThoughts:'thoughts', kDays:'days with entries',
+      moodBeforeT:'Mood before', moodAfterT2:'Mood after', bodyT:'Body', dayByDay:'Day by day',
+      legMood:'top icon: mood before', legBody:'bottom: body',
+      shiftLine:(b,s,w,n)=>`After exhaling, mood got better ${b} of ${n} times, stayed the same ${s}, got worse ${w}.`,
+      copyT:'Deeper analysis', copyNote:'Copy the entries for this period and paste them into Claude or another assistant. Nothing is sent automatically.',
+      copyBtn:'Copy entries', copied:'Copied', copyFail:'Could not copy. Select the text manually.',
+      copyPrompt:'Here is my journal of thoughts, mood and body. Look at which themes repeat, how they relate to mood and body, and what changes after exhaling. No judgement and no advice, only observations.',
+      periodLabel:{week:'this week',month:'this month',all:'all time'},
       wordsT:'Words that keep coming back', historyT:'All exhales',
       privacy:'Thoughts are stored only in this browser on this device. Nobody else can see them, even with the same link.',
       wipe:'Delete all thoughts', wipeSure:'Sure? Tap again', wiped:'Deleted.',
@@ -256,6 +332,21 @@
   const L=()=>I18N[lang];
   const TONE={calm:'#2cb7af',joy:'#48e075',anxious:'#e9c14d',sad:'#4fa1de',irritated:'#ed302a',empty:'#80838e',
               good:'#48e075',energetic:'#2feada',tired:'#4fa1de',weak:'#80838e',tense:'#e9c14d',pain:'#ed302a'};
+  const ICONS={
+    calm:'<path d="M3 10c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>',
+    joy:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
+    anxious:'<path d="M2.5 12l3-4.5 3 9 3-9 3 9 3-9 3 4.5"/>',
+    sad:'<path d="M12 3.5c3 4 6 7.2 6 10.5a6 6 0 0 1-12 0c0-3.3 3-6.5 6-10.5z"/>',
+    irritated:'<path d="M12 21a6 6 0 0 0 6-6c0-4-2.6-6-3.8-10-1.8 1.8-2 3.6-2 4.8-1-.8-1.8-2-1.9-3.8C8.2 8 6 10.8 6 15a6 6 0 0 0 6 6z"/>',
+    empty:'<circle cx="12" cy="12" r="8" stroke-dasharray="2.2 3.2"/>',
+    good:'<path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+    energetic:'<path d="M13.5 2.5L5 13.5h6l-1 8 8.5-11h-6l1-8z"/>',
+    tired:'<path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/>',
+    weak:'<rect x="3" y="7.5" width="16" height="9" rx="2.2"/><path d="M21.5 11v2"/><path d="M6 10.5v3" stroke-width="2.4"/>',
+    tense:'<path d="M2.5 12H8M16 12h5.5M7 8l4 4-4 4M17 8l-4 4 4 4"/>',
+    pain:'<path d="M2.5 12h4l2-5.5 3.2 11 2.3-7.5 1.8 2h5.7"/>'
+  };
+  const icon=(k,cls)=>'<svg class="'+(cls||'ico')+'" viewBox="0 0 24 24" fill="none" stroke="'+(TONE[k]||'#80838e')+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[k]||'')+'</svg>';
   const EX_MB=[['anxious','tired','calm'],['anxious','tense','anxious'],['calm','good','calm'],['sad','tired','empty'],['anxious','weak','calm']];
   const cv = $('c'), ctx = cv.getContext('2d'), stage = $('stage');
   const ta = $('stream'), exhaleBtn = $('exhale'), speech = $('speech'), countEl = $('count');
@@ -265,7 +356,9 @@
   function resize(){
     const r = stage.getBoundingClientRect(), d = Math.min(2, devicePixelRatio||1);
     W=r.width; H=r.height; cv.width=W*d; cv.height=H*d; ctx.setTransform(d,0,0,d,0,0);
-    R = Math.max(64, Math.min(W*0.3, H*0.3, 170)); CX=W/2; CY=H*0.44;
+    const phone=matchMedia('(max-width:640px)').matches;
+    if(phone){ R=Math.max(90, Math.min(W*0.46, H*0.3)); CX=W/2; CY=H*0.36; }
+    else { R = Math.max(64, Math.min(W*0.3, H*0.3, 170)); CX=W/2; CY=H*0.44; }
     const wm=$('wordmark'); wm.style.top=(CY+R*1.42)+'px';
   }
   addEventListener('resize', resize);
@@ -508,11 +601,13 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       $('field-wrap').hidden=true; $('actions').hidden=true; $('checkin').hidden=false;
       $('step').textContent=step; $('step').hidden=!step;
       const box=$('chips'); box.textContent='';
-      const finish=v=>{ $('checkin').hidden=true; $('field-wrap').hidden=false; $('actions').hidden=false; resolve(v); };
+      $('checkin').classList.remove('leaving');
+      const finish=v=>{ const c=$('checkin'); c.classList.add('leaving');
+        setTimeout(()=>{ c.hidden=true; c.classList.remove('leaving'); $('field-wrap').hidden=false; $('actions').hidden=false; resolve(v); }, reduce?0:220); };
       Object.entries(t[kind]).forEach(([k,label])=>{
         const b=document.createElement('button'); b.type='button'; b.className='chip'; b.setAttribute('aria-pressed','false');
-        const i=document.createElement('i'); i.style.background=TONE[k]; b.appendChild(i); b.append(label);
-        b.onclick=()=>{ b.setAttribute('aria-pressed','true'); pulse=performance.now(); kick(); setTimeout(()=>finish(k), reduce?0:260); };
+        b.innerHTML=icon(k,'big'); b.style.color=TONE[k]; const sp=document.createElement('span'); sp.textContent=label; sp.style.color='var(--text-primary)'; b.appendChild(sp);
+        b.onclick=()=>{ b.setAttribute('aria-pressed','true'); pulse=performance.now(); kick(); finish(k); };
         box.appendChild(b);
       });
       $('skip').onclick=()=>finish(null);
@@ -532,72 +627,127 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   /* ---------- stats ---------- */
   const DAY=864e5, now0=Date.now();
   const example=()=>L().example.map((d,i)=>({at:now0-(9-i*2)*DAY, thoughts:d.map(([text,theme])=>({text,theme})), mood:EX_MB[i][0], body:EX_MB[i][1], moodAfter:EX_MB[i][2]}));
+  let viewDumps=[], viewExample=false, tab='diary', period='week';
+  const DAYMS=864e5;
+  const dayKey=ts=>{ const d=new Date(ts); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+  const startOfDay=ts=>{ const d=new Date(ts); d.setHours(0,0,0,0); return d.getTime(); };
   function render(dumps, isExample){
-    $('stats-list').textContent='';
+    viewDumps=dumps; viewExample=isExample;
     const total=dumps.reduce((s,d)=>s+(d.thoughts||[]).length,0);
     $('stats-meta').textContent = L().meta(isExample, dumps.length, total);
-    $('stats-note').textContent = isExample ? L().noteEx : L().note;
-    const tally=(key,el)=>{ const c={}; dumps.forEach(d=>{ if(d[key]) c[d[key]]=(c[d[key]]||0)+1; }); el.textContent='';
-      const e=Object.entries(c).sort((a,b)=>b[1]-a[1]);
-      if(!e.length){ const sp=document.createElement('span'); sp.textContent='—'; el.appendChild(sp); }
-      e.forEach(([k,n])=>{ const sp=document.createElement('span'); const i=document.createElement('i'); i.style.background=TONE[k]||'#80838e'; const b=document.createElement('b'); b.textContent='×'+n; sp.append(i, (L()[key][k]||k)+' ', b); el.appendChild(sp); }); };
-    tally('mood',$('mood-tally')); tally('body',$('body-tally'));
-    { const c={}; dumps.forEach(d=>{ if(d.moodAfter) c[d.moodAfter]=(c[d.moodAfter]||0)+1; }); const el=$('after-tally'); el.textContent='';
-      const e=Object.entries(c).sort((a,b)=>b[1]-a[1]); if(!e.length){ const sp=document.createElement('span'); sp.textContent='—'; el.appendChild(sp); }
-      e.forEach(([k,n])=>{ const sp=document.createElement('span'); const i=document.createElement('i'); i.style.background=TONE[k]; const b=document.createElement('b'); b.textContent='×'+n; sp.append(i, L().mood[k]+' ', b); el.appendChild(sp); }); }
-    { const c={}; dumps.forEach(d=>{ if(d.mood&&d.moodAfter){ const k=d.mood+'>'+d.moodAfter; c[k]=(c[k]||0)+1; } }); const el=$('shift-tally'); el.textContent='';
-      const e=Object.entries(c).sort((a,b)=>b[1]-a[1]); if(!e.length){ const sp=document.createElement('span'); sp.textContent='—'; el.appendChild(sp); }
-      e.forEach(([k,n])=>{ const [a,b2]=k.split('>'); const sp=document.createElement('span'); const i1=document.createElement('i'); i1.style.background=TONE[a]; const i2=document.createElement('i'); i2.style.background=TONE[b2]; const b=document.createElement('b'); b.textContent='×'+n;
-        sp.append(i1, L().mood[a]+(a===b2?' · '+L().same+' ':' → '), ...(a===b2?[]:[i2, L().mood[b2]+' ']), b); el.appendChild(sp); }); }
-    const list=$('stats-list'), hist=$('history'); hist.textContent='';
-    const found=new Map();
-    dumps.forEach((d,di)=>(d.thoughts||[]).forEach(t=>{
-      const seen=new Set();
-      words(t.text).forEach(w=>{
-        const k=stem(w); if(seen.has(k)) return; seen.add(k);
-        const e=found.get(k)||{forms:{}, dumps:new Set(), last:''};
-        e.forms[w]=(e.forms[w]||0)+1; e.dumps.add(di); e.last=t.text; found.set(k,e);
-      });
-    }));
-    const rep=[...found.entries()].filter(([,e])=>e.dumps.size>1).sort((a,b)=>b[1].dumps.size-a[1].dumps.size).slice(0,12);
-    const shown=dumps.slice(-14), off=dumps.length-shown.length;
-    rep.forEach(([k,e])=>{
-      const word=Object.entries(e.forms).sort((a,b)=>b[1]-a[1])[0][0];
-      const label=word.charAt(0).toUpperCase()+word.slice(1);
-      const row=document.createElement('div'); row.className='rowt';
-      row.innerHTML='<span class="t"></span><span class="n"></span><span class="c"></span><span class="strip" aria-hidden="true"></span>';
-      row.querySelector('.t').textContent=label;
-      row.querySelector('.n').textContent='×'+e.dumps.size;
-      const mc={}; e.dumps.forEach(i=>{ const m=dumps[i].mood; if(m) mc[m]=(mc[m]||0)+1; });
-      const top=Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
-      row.querySelector('.c').textContent=L().last+e.last + (top? ' · '+L().mostly+L().mood[top[0]].toLowerCase() : '');
-      const st=row.querySelector('.strip');
-      shown.forEach((_,i)=>{ const dot=document.createElement('i'); if(e.dumps.has(i+off)) dot.className='on'; st.appendChild(dot); });
-      row.setAttribute('aria-label', L().aria(label, e.dumps.size));
-      list.appendChild(row);
-    });
-    if(!rep.length){ const p=document.createElement('p'); p.className='note'; p.textContent=L().noRepeatsLong; list.appendChild(p); }
-    const hot=new Set(rep.map(([k])=>k));
-    const fmt=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
-    dumps.slice().reverse().slice(0,20).forEach(d=>{
-      const box=document.createElement('div'); box.className='day';
-      const h=document.createElement('div'); h.className='overline';
-      const mb=[d.mood&&L().mood[d.mood], d.moodAfter&&('→ '+L().mood[d.moodAfter]), d.body&&L().body[d.body]].filter(Boolean).join(' ');
-      h.textContent=fmt.format(new Date(d.at))+(mb?' · '+mb:''); box.appendChild(h);
-      const ul=document.createElement('ul');
-      (d.thoughts||[]).forEach(t=>{
-        const li=document.createElement('li');
-        t.text.split(/(\s+)/).forEach(part=>{
-          const w=part.toLowerCase().replace(/[^\p{L}\p{N}'’-]/gu,'');
-          if(w.length>=4 && !STOP.has(w) && hot.has(stem(w))){ const m=document.createElement('mark'); m.textContent=part; li.appendChild(m); }
-          else li.append(part);
-        });
-        ul.appendChild(li);
-      });
-      box.appendChild(ul); hist.appendChild(box);
-    });
+    $('tab-diary').setAttribute('aria-selected', tab==='diary'); $('tab-an').setAttribute('aria-selected', tab==='an');
+    $('diary').hidden = tab!=='diary'; $('analytics').hidden = tab!=='an';
+    tab==='diary' ? renderDiary() : renderAnalytics();
     const wipe=$('wipe'); wipe.hidden=isExample; wipe.classList.remove('armed'); wipe.textContent=L().wipe;
   }
+  function dayTitle(ts){
+    const t0=startOfDay(Date.now()), d0=startOfDay(ts);
+    if(d0===t0) return L().today; if(d0===t0-DAYMS) return L().yesterday;
+    return new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{weekday:'long', day:'numeric', month:'long'}).format(new Date(ts));
+  }
+  function moodsHTML(d){
+    const t=L(); let h='';
+    if(d.mood) h+=icon(d.mood)+'<span>'+t.mood[d.mood]+'</span>';
+    if(d.moodAfter) h+='<span class="arrow">→</span>'+icon(d.moodAfter)+'<span>'+t.mood[d.moodAfter]+'</span>';
+    if(d.body) h+='<span class="arrow">·</span>'+icon(d.body)+'<span>'+t.body[d.body]+'</span>';
+    return h;
+  }
+  function renderDiary(){
+    const box=$('diary'); box.textContent='';
+    if(!viewDumps.length){ box.innerHTML='<p class="empty"></p>'; box.firstChild.textContent=L().noEntries; return; }
+    const tf=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{hour:'2-digit',minute:'2-digit'});
+    let last='';
+    viewDumps.slice().sort((a,b)=>b.at-a.at).forEach(d=>{
+      const k=dayKey(d.at);
+      if(k!==last){ const h=document.createElement('h3'); h.className='dayhead'; h.textContent=dayTitle(d.at); box.appendChild(h); last=k; }
+      const e=document.createElement('article'); e.className='entry';
+      const head=document.createElement('div'); head.className='entry-head';
+      const tm=document.createElement('time'); tm.dateTime=new Date(d.at).toISOString(); tm.textContent=tf.format(new Date(d.at)); head.appendChild(tm);
+      const m=document.createElement('span'); m.className='moods'; m.innerHTML=moodsHTML(d); head.appendChild(m);
+      e.appendChild(head);
+      const ul=document.createElement('ul');
+      (d.thoughts||[]).forEach(t=>{ const li=document.createElement('li'); li.textContent=t.text; ul.appendChild(li); });
+      e.appendChild(ul); box.appendChild(e);
+    });
+  }
+  function inPeriod(){
+    if(period==='all') return viewDumps.slice();
+    const from=startOfDay(Date.now())-(period==='week'?6:29)*DAYMS;
+    return viewDumps.filter(d=>d.at>=from);
+  }
+  function bars(el, key, list){
+    const c={}; list.forEach(d=>{ if(d[key]) c[d[key]]=(c[d[key]]||0)+1; });
+    const e=Object.entries(c).sort((a,b)=>b[1]-a[1]); const max=Math.max(1,...e.map(x=>x[1]));
+    const dict = key==='body' ? L().body : L().mood;
+    if(!e.length){ el.innerHTML='<p class="empty">—</p>'; return; }
+    el.innerHTML='';
+    e.forEach(([k,n])=>{
+      const row=document.createElement('div'); row.className='bar';
+      row.innerHTML='<span class="lab">'+icon(k)+'<span></span></span><span class="track"><span class="fill"></span></span><b></b>';
+      row.querySelector('.lab span').textContent=dict[k];
+      const f=row.querySelector('.fill'); f.style.width=(n/max*100)+'%'; f.style.background=TONE[k];
+      row.querySelector('b').textContent=n;
+      el.appendChild(row);
+    });
+  }
+  const VAL={joy:2, calm:1, empty:0, sad:-1, anxious:-1, irritated:-1};
+  function renderAnalytics(){
+    const t=L(), box=$('analytics'); box.textContent='';
+    const seg=document.createElement('div'); seg.className='seg'; seg.setAttribute('role','group');
+    ['week','month','all'].forEach(p=>{ const b=document.createElement('button'); b.type='button'; b.textContent=t[p]; b.setAttribute('aria-pressed', p===period); b.onclick=()=>{ period=p; renderAnalytics(); }; seg.appendChild(b); });
+    box.appendChild(seg);
+    const list=inPeriod();
+    const nT=list.reduce((s,d)=>s+(d.thoughts||[]).length,0), nD=new Set(list.map(d=>dayKey(d.at))).size;
+    const k=document.createElement('div'); k.className='kpis';
+    [[list.length,t.kExhales],[nT,t.kThoughts],[nD,t.kDays]].forEach(([v,l])=>{ const d=document.createElement('div'); d.className='kpi'; d.innerHTML='<b></b><span></span>'; d.querySelector('b').textContent=v; d.querySelector('span').textContent=l; k.appendChild(d); });
+    box.appendChild(k);
+    if(!list.length){ const p=document.createElement('p'); p.className='empty'; p.textContent=t.noEntries; box.appendChild(p); return; }
+    const sec=(title)=>{ const s=document.createElement('section'); s.className='sec'; const o=document.createElement('div'); o.className='overline'; o.textContent=title; s.appendChild(o); box.appendChild(s); return s; };
+    // day by day
+    const dd=sec(t.dayByDay); const grid=document.createElement('div'); grid.className='days'; dd.appendChild(grid);
+    const today=startOfDay(Date.now());
+    let first = period==='week' ? today-6*DAYMS : period==='month' ? today-29*DAYMS : startOfDay(Math.min(...list.map(d=>d.at)));
+    if(period==='all' && (today-first)/DAYMS>89) first=today-89*DAYMS;
+    const wd=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{weekday:'short'}), dm=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric'});
+    for(let ts=first; ts<=today; ts+=DAYMS){
+      const day=list.filter(d=>startOfDay(d.at)===startOfDay(ts));
+      const pick=key=>{ const c={}; day.forEach(d=>{ if(d[key]) c[d[key]]=(c[d[key]]||0)+1; }); const e=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]; return e&&e[0]; };
+      const mo=pick('mood'), bo=pick('body');
+      const c=document.createElement('div'); c.className='dcell'+(day.length?' has':'');
+      c.innerHTML='<small></small>'+(mo?icon(mo):'<svg class="ico"></svg>')+(bo?icon(bo):'<svg class="ico"></svg>');
+      c.querySelector('small').textContent = period==='week' ? wd.format(new Date(ts)) : dm.format(new Date(ts));
+      if(day.length) c.title=day.length+' · '+[mo&&t.mood[mo], bo&&t.body[bo]].filter(Boolean).join(', ');
+      grid.appendChild(c);
+    }
+    const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML='<span></span><span></span>'; lg.children[0].textContent=t.legMood; lg.children[1].textContent=t.legBody; dd.appendChild(lg);
+    // shift
+    const pairs=list.filter(d=>d.mood&&d.moodAfter);
+    if(pairs.length){
+      let b=0,sm=0,w=0; pairs.forEach(d=>{ const x=VAL[d.moodAfter]-VAL[d.mood]; if(x>0)b++; else if(x<0)w++; else sm++; });
+      const s2=sec(t.moodAfterT2); const p=document.createElement('p'); p.className='shift'; p.textContent=t.shiftLine(b,sm,w,pairs.length); s2.appendChild(p);
+      const bb=document.createElement('div'); bb.className='bars'; bb.style.marginTop='14px'; s2.appendChild(bb); bars(bb,'moodAfter',list);
+    }
+    const s1=sec(t.moodBeforeT); const b1=document.createElement('div'); b1.className='bars'; s1.appendChild(b1); bars(b1,'mood',list);
+    const s3=sec(t.bodyT); const b3=document.createElement('div'); b3.className='bars'; s3.appendChild(b3); bars(b3,'body',list);
+    // copy for deeper analysis
+    const cb=document.createElement('div'); cb.className='copybox';
+    cb.innerHTML='<div class="overline"></div><p></p><button class="ghost" type="button"></button>';
+    cb.children[0].textContent=t.copyT; cb.children[1].textContent=t.copyNote;
+    const btn=cb.children[2]; btn.textContent=t.copyBtn;
+    btn.onclick=()=>{
+      const fmt=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+      const txt=t.copyPrompt+'\n\n'+list.slice().sort((a,b)=>a.at-b.at).map(d=>{
+        const mb=[d.mood&&(t.mood[d.mood]), d.moodAfter&&('→ '+t.mood[d.moodAfter]), d.body&&(t.bodyT+': '+t.body[d.body])].filter(Boolean).join(' ');
+        return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+(d.thoughts||[]).map(x=>'- '+x.text).join('\n');
+      }).join('\n\n');
+      const ok=()=>{ btn.textContent=t.copied; setTimeout(()=>btn.textContent=t.copyBtn, 2000); };
+      try{ navigator.clipboard.writeText(txt).then(ok, ()=>fallback()); }catch(e){ fallback(); }
+      function fallback(){ const ta2=document.createElement('textarea'); ta2.value=txt; ta2.style.cssText='width:100%;min-height:160px;margin-top:8px;background:var(--surface-sunk);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:10px;padding:10px;font:13px/18px var(--font-sans)'; cb.appendChild(ta2); ta2.select(); btn.textContent=t.copyFail; }
+    };
+    box.appendChild(cb);
+  }
+  $('tab-diary').onclick=()=>{ tab='diary'; render(viewDumps, viewExample); };
+  $('tab-an').onclick=()=>{ tab='an'; render(viewDumps, viewExample); };
   const STOP=new Set(('треба мабуть може можу можна тому дуже щось якщо коли тепер зараз сьогодні навіть взагалі знову також тільки просто того цього цьому цей цих який яка яке які якого мене мені мною тебе тобі його вона воно вони нашу наша наше наші свою своє свій свої бути буде було була були хочу хоче хочеш нарешті думаю думка думки чому тоді поки після перед через щоб або ніби наче майже досі вже хоча десь кудись завжди ніколи інколи іноді типу все всі усе усі весь вся тут там ось отже знаю напевно справді потрібно потім зовсім зробити робити'
     +' about that this with have just what when where then they them there really maybe need want still again also from into would could should think thinking okay yeah like some thing things because know going will been were your mine more much very even only ever never always every today now tomorrow').split(/\s+/));
   function words(text){ return (text.toLowerCase().match(/[\p{L}'’-]+/gu)||[]).map(w=>w.replace(/^['’-]+|['’-]+$/g,'')).filter(w=>w.length>=4 && !STOP.has(w)); }
@@ -607,7 +757,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent=L().wipeSure; clearTimeout(b._t); b._t=setTimeout(()=>{ b.classList.remove('armed'); b.textContent=L().wipe; }, 4000); return; }
     try{ localStorage.removeItem(LS); }catch(e){}
     render(example(), true);
-    $('stats-note').textContent=L().wiped+' '+L().noteEx;
+    $('stats-meta').textContent=L().wiped+' '+$('stats-meta').textContent;
   };
   $('open-stats').onclick=async()=>{
     const d=await loadDumps();
@@ -696,6 +846,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     const t=L(); document.documentElement.lang=lang; document.title=t.title;
     document.querySelectorAll('[data-t]').forEach(el=>{ el.textContent=t[el.dataset.t]; });
     ta.placeholder=t.placeholder; stage.setAttribute('aria-label', t.micLabel); stopMic();
+    const br=$('brand'); br.textContent=''; [...t.name[0]].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; br.appendChild(sp); }); [...t.name[1]].forEach(ch=>{ const sp=document.createElement('span'); sp.className='on'; sp.textContent=ch; br.appendChild(sp); });
     const wm=$('wordmark'); wm.textContent=''; wm.setAttribute('aria-label', t.title);
     const [dim,lit]=t.name; let i=0;
     [...dim].forEach(ch=>{ const sp=document.createElement('span'); sp.className='dim'; sp.textContent=ch; wm.appendChild(sp); });
