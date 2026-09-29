@@ -166,7 +166,12 @@
   .dcell.none .ico{opacity:0;}
   .legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:var(--text-muted);}
   .copybox{margin-top:28px; padding:16px; border:1px solid var(--border-hairline); border-radius:14px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
-  .copybox p{margin:0; font-size:13px; line-height:18px; color:var(--text-muted);}
+  .copybox p{margin:0; font-size:14px; line-height:21px; color:var(--text-secondary);}
+  .copybox h4{margin:0; font-size:18px; line-height:24px; font-weight:600; color:var(--text-primary);}
+  .copybox .steps{margin:2px 0 6px; padding-left:22px; display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:21px; color:var(--text-secondary);}
+  .copybox .steps li::marker{font-family:var(--font-mono); color:var(--aqua-600);}
+  .copybox .foot{font-size:13px; line-height:18px; color:var(--text-muted);}
+  .primary.sm{font-size:14px; padding:10px 18px;}
   /* PIN pad */
   .pin{display:flex; flex-direction:column; align-items:center; gap:18px; padding:28px 0 8px; text-align:center;}
   .pin h3{margin:0; font-size:22px; line-height:28px; font-weight:600;}
@@ -308,8 +313,8 @@
       moodBeforeT:'Настрій до видиху', moodAfterT2:'Настрій після', bodyT:'Тіло', dayByDay:'День за днем',
       legMood:'верхня іконка: настрій до', legBody:'нижня: тіло',
       shiftLine:(b,s,w,n)=>`Після видиху настрій покращився ${b} ${pluralUk(b,'раз','рази','разів')} з ${n}, не змінився ${s}, погіршився ${w}.`,
-      copyT:'Глибший аналіз', copyNote:'Скопіюй записи за цей період і встав у Claude або інший асистент. Нічого не надсилається автоматично.',
-      copyBtn:'Скопіювати записи', copied:'Скопійовано', copyFail:'Не вдалося скопіювати. Виділи текст вручну.',
+      copyT:'Хочеш глибший розбір?', copyNote:'Видихай сам не аналізує твої думки, щоб вони не залишали телефон. Якщо хочеш, щоб штучний інтелект пошукав у них закономірності:', copySteps:['Натисни кнопку нижче. Записи за обраний період скопіюються разом із готовим запитом.','Відкрий Claude, ChatGPT чи інший ШІ-асистент.','Встав текст у чат і надішли.'], copyFoot:'Ділитися чи ні, вирішуєш ти. Застосунок нічого не надсилає сам.',
+      copyBtn:p=>'Скопіювати записи '+p, copied:'Скопійовано. Тепер встав у чат з ШІ.', copyFail:'Не вдалося скопіювати. Виділи текст нижче вручну.',
       copyPrompt:'Ось мій щоденник думок, настрою і стану тіла. Подивись, які теми повторюються, як вони пов\'язані з настроєм і тілом, і що змінюється після видиху. Без оцінок і без порад, тільки спостереження.',
       periodLabel:{week:'за тиждень',month:'за місяць',all:'за весь час'},
       wordsT:'Слова, що повертаються', historyT:'Усі видихи',
@@ -356,8 +361,8 @@
       moodBeforeT:'Mood before', moodAfterT2:'Mood after', bodyT:'Body', dayByDay:'Day by day',
       legMood:'top icon: mood before', legBody:'bottom: body',
       shiftLine:(b,s,w,n)=>`After exhaling, mood got better ${b} of ${n} times, stayed the same ${s}, got worse ${w}.`,
-      copyT:'Deeper analysis', copyNote:'Copy the entries for this period and paste them into Claude or another assistant. Nothing is sent automatically.',
-      copyBtn:'Copy entries', copied:'Copied', copyFail:'Could not copy. Select the text manually.',
+      copyT:'Want a deeper look?', copyNote:'Exhale does not analyze your thoughts itself, so they never leave your phone. If you want an AI to look for patterns in them:', copySteps:['Tap the button below. Entries for the chosen period are copied together with a ready-made request.','Open Claude, ChatGPT or another AI assistant.','Paste the text into the chat and send it.'], copyFoot:'Sharing is your choice. The app never sends anything on its own.',
+      copyBtn:p=>'Copy entries for '+p, copied:'Copied. Now paste it into your AI chat.', copyFail:'Could not copy. Select the text below manually.',
       copyPrompt:'Here is my journal of thoughts, mood and body. Look at which themes repeat, how they relate to mood and body, and what changes after exhaling. No judgement and no advice, only observations.',
       periodLabel:{week:'this week',month:'this month',all:'all time'},
       wordsT:'Words that keep coming back', historyT:'All exhales',
@@ -917,9 +922,11 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     const s3=sec(t.bodyT); const b3=document.createElement('div'); b3.className='bars'; s3.appendChild(b3); bars(b3,'body',list);
     // copy for deeper analysis
     const cb=document.createElement('div'); cb.className='copybox';
-    cb.innerHTML='<div class="overline"></div><p></p><button class="ghost" type="button"></button>';
-    cb.children[0].textContent=t.copyT; cb.children[1].textContent=t.copyNote;
-    const btn=cb.children[2]; btn.textContent=t.copyBtn;
+    cb.innerHTML='<h4></h4><p></p><ol class="steps"></ol><button class="primary sm" type="button"></button><p class="foot"></p>';
+    cb.querySelector('h4').textContent=t.copyT; cb.querySelector('p').textContent=t.copyNote;
+    t.copySteps.forEach(x=>{ const li=document.createElement('li'); li.textContent=x; cb.querySelector('ol').appendChild(li); });
+    cb.querySelector('.foot').textContent=t.copyFoot;
+    const btn=cb.querySelector('button'); const label=t.copyBtn(t.periodLabel[period]); btn.textContent=label;
     btn.onclick=()=>{
       if(hasLock() && !priv){
         const pad=document.createElement('div'); cb.appendChild(pad); btn.hidden=true;
@@ -931,7 +938,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
         const mb=[d.mood&&(t.mood[d.mood]), d.moodAfter&&('→ '+t.mood[d.moodAfter]), d.body&&(t.bodyT+': '+t.body[d.body])].filter(Boolean).join(' ');
         return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+thoughtsOf(d).map(x=>'- '+x.text).join('\n');
       }).join('\n\n');
-      const ok=()=>{ btn.textContent=t.copied; setTimeout(()=>btn.textContent=t.copyBtn, 2000); };
+      const ok=()=>{ btn.textContent=t.copied; setTimeout(()=>btn.textContent=label, 3000); };
       try{ navigator.clipboard.writeText(txt).then(ok, ()=>fallback()); }catch(e){ fallback(); }
       function fallback(){ const ta2=document.createElement('textarea'); ta2.value=txt; ta2.style.cssText='width:100%;min-height:160px;margin-top:8px;background:var(--surface-sunk);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:10px;padding:10px;font:13px/18px var(--font-sans)'; cb.appendChild(ta2); ta2.select(); btn.textContent=t.copyFail; }
     };
