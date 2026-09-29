@@ -244,6 +244,12 @@
   .snd svg{width:18px; height:18px;}
   .snd[aria-pressed="true"]{color:var(--aqua-400);}
   .snd[aria-pressed="true"] .x, .snd[aria-pressed="false"] .w1, .snd[aria-pressed="false"] .w2{display:none;}
+  .send{flex:none; align-self:flex-end; width:44px; height:44px; border-radius:50%; border:1.5px solid var(--aqua-600); cursor:pointer; background:transparent; color:var(--aqua-400); box-shadow:0 0 14px #2feada33; display:grid; place-items:center; transition:transform .12s, background .15s, box-shadow .15s, color .15s;}
+  .send svg{width:20px; height:20px;}
+  .send:active{transform:scale(.92);}
+  .send:disabled{color:var(--text-faint); box-shadow:none; border-color:var(--border-hairline); cursor:default;}
+  .send:not(:disabled):hover{background:rgba(47,234,218,.08);}
+  .field-wrap{box-sizing:border-box;}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
   @media (max-width:640px){
@@ -298,6 +304,7 @@
     <div class="field-wrap" id="field-wrap">
       <label class="sr" for="stream" data-t="fieldLabel"></label>
       <textarea id="stream" rows="2" ></textarea>
+      <button class="send" id="send" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button>
     </div>
     <div class="actions" id="actions">
       <button class="primary" id="exhale" type="button" disabled></button>
@@ -422,7 +429,7 @@
       meta:(ex,d,t)=>(ex?'Приклад · ':'')+d+' '+pluralUk(d,'видих','видихи','видихів')+' · '+t+' '+pluralUk(t,'думка','думки','думок'),
       noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
       note:'Лише рахунок, без порад.',
-      micOn:'Слухаю українською. Кожна фраза полетить у сферу. Торкнись сфери ще раз, щоб зупинити.', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори. Або пиши нижче.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
+      micOn:'Слухаю. Кажи скільки завгодно, з паузами. Коли думка завершена, натисни стрілку. Торкнись сфери, щоб зупинити.', sendLabel:'Відправити думку у сферу', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори або пиши. Стрілка відправляє думку у сферу.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
       tagline:'Скажи все, що крутиться в голові, — і видихни.', wmsub:'Твій щоденник',
       startBtn:'Торкнись сфери, щоб почати',
       hints:['Приватно. Лише на твоєму телефоні.','Без оцінок. Без порад.','Говори або пиши — як є.','Щоденник під PIN-кодом.','Настрій і тіло — день за днем.','Безкоштовно, без реєстрації.'],
@@ -475,7 +482,7 @@
       meta:(ex,d,t)=>(ex?'Example · ':'')+d+' '+(d===1?'exhale':'exhales')+' · '+t+' '+(t===1?'thought':'thoughts'),
       noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
       note:'Counts only, no advice.',
-      micOn:'Listening in English. Every phrase flies into the sphere. Tap the sphere again to stop.', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk. Or type below.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
+      micOn:'Listening. Take your time, pauses are fine. When the thought is complete, tap the arrow. Tap the sphere to stop.', sendLabel:'Send the thought to the sphere', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk, or type. The arrow sends a thought to the sphere.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
       tagline:'Say everything that’s spinning in your head — and exhale.', wmsub:'Your journal',
       startBtn:'Tap the sphere to begin',
       hints:['Private. Only on your phone.','No judgement. No advice.','Talk or type — just as it is.','Your journal is locked with a PIN.','Mood and body, day by day.','Free, no sign-up.'],
@@ -681,34 +688,33 @@
     anim.onfinish=done;
   }
   // a thought is complete at . ! ? … ; or newline, or after a pause
-  const SPLIT=/[^.!?…;\n]+[.!?…;\n]+/g;
-  let pauseT=null;
-  function harvest(all){
-    const v=ta.value; let taken=0, m; SPLIT.lastIndex=0;
-    const parts=[];
-    while((m=SPLIT.exec(v))){ parts.push(m[0]); taken=SPLIT.lastIndex; }
-    let rest=v.slice(taken);
-    if(all && rest.trim()){ parts.push(rest); rest=''; }
-    if(!parts.length) return;
-    ta.value=rest.replace(/^\s+/,'');
-    parts.forEach((p,i)=>setTimeout(()=>absorb(p), i*260));
+  // a thought goes into the sphere only when the person sends it (arrow button or Enter)
+  const sendBtn=$('send');
+  function updateSend(){ sendBtn.disabled=!ta.value.trim(); }
+  function sendThought(){
+    const t=ta.value.trim(); if(!t) return false;
+    ta.value=''; updateSend(); updateCount();
+    absorb(t.charAt(0).toUpperCase()+t.slice(1));
+    return true;
   }
-  ta.addEventListener('input',()=>{
-    harvest(false); updateCount();
-    clearTimeout(pauseT); pauseT=setTimeout(()=>harvest(true), 4000);
-  });
-  ta.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); clearTimeout(pauseT); harvest(true);} });
+  sendBtn.onclick=()=>{ sendThought(); ta.focus({preventScroll:true}); };
+  ta.addEventListener('input',()=>{ updateSend(); updateCount(); });
+  ta.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendThought(); } });
 
   /* ---------- demo: simulated stream of speech ---------- */
   let demoTimer=null;
   $('demo').onclick=()=>{
     if(demoTimer) return;
-    ta.focus(); let i=0;
-    say(...L().listening); const DEMO=L().demoText;
+    say(...L().listening);
+    const parts=L().demoText.match(/[^.!?]+[.!?]+/g)||[L().demoText];
+    let pi=0, ci=0;
     demoTimer=setInterval(()=>{
-      if(i>=DEMO.length){ clearInterval(demoTimer); demoTimer=null; return; }
-      ta.value+=DEMO[i++]; ta.dispatchEvent(new Event('input'));
-    }, reduce?4:28);
+      if(pi>=parts.length){ clearInterval(demoTimer); demoTimer=null; return; }
+      const cur=parts[pi].trimStart();
+      if(ci<cur.length){ ta.value+=cur[ci++]; updateSend(); updateCount(); return; }
+      if(ci===cur.length){ ci++; setTimeout(()=>{ sendThought(); }, reduce?0:350); return; }
+      if(!ta.value){ pi++; ci=0; }
+    }, reduce?4:30);
   };
 
   /* ---------- storage ---------- */
@@ -884,7 +890,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   }
 
   exhaleBtn.onclick=async()=>{
-    clearTimeout(pauseT); harvest(true);
+    sendThought();
     await new Promise(r=>setTimeout(r, reduce?0:900));
     if(!fragments.length) return;
     const frags=fragments.slice(); fragments=[]; updateCount(); SFX.exhale();
@@ -1153,8 +1159,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
 
   /* ---------- voice: tap the sphere ---------- */
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  let rec=null, listening=false, lastFinal='', lastFinalAt=0, restartT=null, buf='', bufT=null;
-  const SILENCE=2600;   // a thought ends after this much quiet
+  let rec=null, listening=false, lastFinal='', lastFinalAt=0, restartT=null;
   const nrm=t=>t.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
   function liveLine(text){
     speech.textContent='';
@@ -1170,14 +1175,10 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       if(nt.startsWith(lastFinal)){ t=t.split(/\s+/).slice(lastFinal.split(' ').length).join(' '); if(!t.trim()) return; } // cumulative result
     }
     lastFinal=nt; lastFinalAt=now;
-    buf=(buf?buf+' ':'')+t;
-    liveLine(buf); holdBuffer();
-  }
-  function holdBuffer(){ clearTimeout(bufT); bufT=setTimeout(flushBuffer, SILENCE); }
-  function flushBuffer(){
-    clearTimeout(bufT); const t=buf.trim(); buf='';
-    if(t) absorb(t.charAt(0).toUpperCase()+t.slice(1));
-    if(listening) liveLine('');
+    const cur=ta.value.replace(/\s+$/,'');
+    ta.value = cur ? cur+' '+t : t.charAt(0).toUpperCase()+t.slice(1);
+    ta.scrollTop=ta.scrollHeight; updateSend(); updateCount();
+    liveLine('');
   }
   function startMic(){
     if(!SR){ say(L().ask, L().noVoice); return; }
@@ -1199,7 +1200,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
         if(r.isFinal){ commit(r[0].transcript); }
         else interim+=r[0].transcript;
       }
-      if(interim){ liveLine((buf?buf+' ':'')+interim); voiceKick(); if(buf) holdBuffer(); }
+      if(interim){ liveLine(interim); voiceKick(); }
     };
     rec.onerror=e=>{
       if(e.error==='not-allowed'||e.error==='service-not-allowed'||e.error==='audio-capture'){ stopMic(); say(L().ask, L().micDenied); }
@@ -1209,7 +1210,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   }
   function stopMic(){
     if(!listening) return;
-    listening=false; listenLvl=0; clearTimeout(restartT); flushBuffer(); SFX.micOff();
+    listening=false; listenLvl=0; clearTimeout(restartT); SFX.micOff();
     stage.setAttribute('aria-pressed','false');
     try{ rec&&rec.stop(); }catch(e){}
     if(rerender===showAsk) showAsk();
@@ -1229,7 +1230,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   function applyLang(){
     const t=L(); document.documentElement.lang=lang; document.title=t.title;
     document.querySelectorAll('[data-t]').forEach(el=>{ el.textContent=t[el.dataset.t]; });
-    ta.placeholder=t.placeholder; paintSnd(); stage.setAttribute('aria-label', t.micLabel); stopMic();
+    ta.placeholder=t.placeholder; paintSnd(); sendBtn.setAttribute('aria-label', t.sendLabel); sendBtn.title=t.sendLabel; stage.setAttribute('aria-label', t.micLabel); stopMic();
     const br=$('brand'); br.textContent=''; [...t.name[0]].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; br.appendChild(sp); }); [...t.name[1]].forEach(ch=>{ const sp=document.createElement('span'); sp.className='on'; sp.textContent=ch; br.appendChild(sp); });
     const wm=$('wordmark'); wm.textContent=''; wm.setAttribute('aria-label', t.title);
     const [dim,lit]=t.name; let i=0;
