@@ -107,6 +107,7 @@
   .chip i{width:8px; height:8px; border-radius:50%; flex:none;}
   .chip:hover{border-color:var(--jade-300);}
   .chip[aria-pressed="true"]{border-color:var(--aqua-600); box-shadow:0 0 16px #2cb7af33;}
+  .cilabel{font:600 13px/20px var(--font-mono); letter-spacing:.3em; text-transform:uppercase; color:var(--aqua-400); text-shadow:0 0 12px #2feada55, 0 1px 12px #080a0a; padding-left:.3em; margin-top:4px;}
   .step{font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; color:var(--text-muted);}
   .tally{max-width:640px; margin:0 auto; display:flex; flex-wrap:wrap; gap:8px;}
   .tally span{display:flex; align-items:center; gap:8px; font-size:13px; line-height:18px; padding:6px 12px; border:1px solid var(--border-hairline); border-radius:999px; color:var(--text-secondary);}
@@ -282,6 +283,7 @@
     <div class="checkin" id="checkin" hidden>
       <div class="step" id="step"></div>
       <div class="chips" id="chips"></div>
+      <div class="cilabel" id="cilabel"></div>
       <button class="link" id="skip" type="button" data-t="skip"></button>
     </div>
     <div class="field-wrap" id="field-wrap">
@@ -343,6 +345,7 @@
       tagline:'Скажи все, що крутиться в голові, — і видихни.', wmsub:'Твій щоденник',
       startBtn:'Торкнись сфери, щоб почати',
       hints:['Приватно. Лише на твоєму телефоні.','Без оцінок. Без порад.','Говори або пиши — як є.','Щоденник під PIN-кодом.','Настрій і тіло — день за днем.','Безкоштовно, без реєстрації.'],
+      moodL:'Твій настрій', bodyL:'Твоє самопочуття', afterL:'Твій настрій зараз',
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
       searchPh:'Пошук у записах, напр. «мама»', searchLabel:'Пошук у записах', searchClear:'Очистити пошук', searchNone:'Нічого не знайдено.',
       searchFound:(t,e)=>`Знайдено ${t} ${pluralUk(t,'думку','думки','думок')} у ${e} ${pluralUk(e,'записі','записах','записах')}`,
@@ -394,6 +397,7 @@
       tagline:'Say everything that’s spinning in your head — and exhale.', wmsub:'Your journal',
       startBtn:'Tap the sphere to begin',
       hints:['Private. Only on your phone.','No judgement. No advice.','Talk or type — just as it is.','Your journal is locked with a PIN.','Mood and body, day by day.','Free, no sign-up.'],
+      moodL:'Your mood', bodyL:'Your body', afterL:'Your mood now',
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
       searchPh:'Search entries, e.g. “mom”', searchLabel:'Search entries', searchClear:'Clear search', searchNone:'Nothing found.',
       searchFound:(t,e)=>`Found ${t} ${t===1?'thought':'thoughts'} in ${e} ${e===1?'entry':'entries'}`,
@@ -826,8 +830,9 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       let chosen=false;
       if(typeof stopMic==='function') stopMic();
       const draw=()=>{
-      const t=L(), q=t[qKey||(kind==='mood'?'moodQ':'bodyQ')];
-      say(q[0], q[1]);
+      const t=L();
+      speech.textContent='';
+      $('cilabel').textContent = qKey==='afterQ' ? t.afterL : (kind==='mood' ? t.moodL : t.bodyL);
       $('field-wrap').hidden=true; $('actions').hidden=true; $('checkin').hidden=false;
       $('step').textContent=step; $('step').hidden=!step;
       const box=$('chips'); box.textContent='';
