@@ -690,10 +690,13 @@
   // a thought is complete at . ! ? … ; or newline, or after a pause
   // a thought goes into the sphere only when the person sends it (arrow button or Enter)
   const sendBtn=$('send');
-  function updateSend(){ sendBtn.disabled=!ta.value.trim(); }
+  let pendingVoice='';   // words heard but not yet finalised by the recogniser
+  function updateSend(){ sendBtn.disabled=!(ta.value.trim() || pendingVoice.trim()); }
   function sendThought(){
-    const t=ta.value.trim(); if(!t) return false;
-    ta.value=''; updateSend(); updateCount();
+    const heard=pendingVoice.trim();
+    const t=(ta.value.trim()+' '+heard).trim(); if(!t) return false;
+    pendingVoice=''; ta.value=''; updateSend(); updateCount();
+    if(typeof dropVoice==='function') dropVoice(heard);
     absorb(t.charAt(0).toUpperCase()+t.slice(1));
     return true;
   }
@@ -1160,6 +1163,12 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   /* ---------- voice: tap the sphere ---------- */
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   let rec=null, listening=false, lastFinal='', lastFinalAt=0, restartT=null;
+  // after a manual send: forget the phrase in flight so it does not come back into the field
+  function dropVoice(heard){
+    if(heard){ lastFinal=nrm(heard); lastFinalAt=Date.now(); }
+    if(listening){ try{ rec&&rec.abort(); }catch(e){} }
+    if(listening) liveLine('');
+  }
   const nrm=t=>t.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
   function liveLine(text){
     speech.textContent='';
@@ -1177,6 +1186,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     lastFinal=nt; lastFinalAt=now;
     const cur=ta.value.replace(/\s+$/,'');
     ta.value = cur ? cur+' '+t : t.charAt(0).toUpperCase()+t.slice(1);
+    pendingVoice='';
     ta.scrollTop=ta.scrollHeight; updateSend(); updateCount();
     liveLine('');
   }
@@ -1187,7 +1197,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     runRec();
   }
   function runRec(){
-    try{ rec&&rec.abort(); }catch(e){}
+    if(rec){ rec.onend=null; rec.onresult=null; rec.onerror=null; try{ rec.abort(); }catch(e){} }
     rec=new SR();
     rec.lang=L().speech;          // explicit: uk-UA or en-US
     rec.continuous=false;         // one utterance per session: fewer duplicates on Android and iOS
@@ -1200,6 +1210,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
         if(r.isFinal){ commit(r[0].transcript); }
         else interim+=r[0].transcript;
       }
+      pendingVoice=interim; updateSend();
       if(interim){ liveLine(interim); voiceKick(); }
     };
     rec.onerror=e=>{
