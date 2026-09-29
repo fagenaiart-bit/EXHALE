@@ -212,6 +212,10 @@
   .app.intro .dock{display:none;}
   .app.intro .stage{cursor:pointer;}
   .app.intro::after{display:none;}
+  .speech .tagline{margin:0 auto; max-width:22em; font:600 19px/27px var(--font-sans); color:var(--text-primary); text-wrap:balance;}
+  .speech .tagsub{margin:6px auto 16px; font-size:14px; line-height:20px; font-weight:400; color:var(--text-muted);}
+  .app.intro .speech{padding-bottom:6vh; max-width:30em;}
+  @media (max-width:640px){ .speech .tagline{font-size:17px; line-height:24px;} .speech .tagsub{font-size:13px;} .app.intro .speech{padding-bottom:4vh;} }
   .startbtn{font:500 14px/20px var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); background:none; border:0; cursor:pointer; padding:10px 14px; animation:breathe 4s ease-in-out infinite;}
   .startbtn:hover{color:var(--text-primary);}
   @keyframes breathe{50%{color:var(--text-secondary)}}
@@ -333,6 +337,7 @@
       noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
       note:'Лише рахунок, без порад.',
       micOn:'Слухаю українською. Кожна фраза полетить у сферу. Торкнись сфери ще раз, щоб зупинити.', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори. Або пиши нижче.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
+      tagline:'Скажи все, що крутиться в голові, — і видихни.', tagsub:'Щоденник думок, настрою й самопочуття.',
       startBtn:'Торкнись сфери, щоб почати',
       hints:['Приватно. Лише на твоєму телефоні.','Без оцінок. Без порад.','Говори або пиши — як є.','Щоденник під PIN-кодом.','Настрій і тіло — день за днем.','Безкоштовно, без реєстрації.'],
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
@@ -383,6 +388,7 @@
       noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
       note:'Counts only, no advice.',
       micOn:'Listening in English. Every phrase flies into the sphere. Tap the sphere again to stop.', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk. Or type below.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
+      tagline:'Say everything that’s spinning in your head — and exhale.', tagsub:'A journal of thoughts, mood and body.',
       startBtn:'Tap the sphere to begin',
       hints:['Private. Only on your phone.','No judgement. No advice.','Talk or type — just as it is.','Your journal is locked with a PIN.','Mood and body, day by day.','Free, no sign-up.'],
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
@@ -453,9 +459,9 @@
     W=r.width; H=r.height; cv.width=W*d; cv.height=H*d; ctx.setTransform(d,0,0,d,0,0);
     const phone=matchMedia('(max-width:640px)').matches;
     const intro=$('app').classList.contains('intro');
-    if(phone && intro){ R=Math.max(80, Math.min(W*0.3, H*0.17)); CX=W/2; CY=H*0.45; }
+    if(phone && intro){ R=Math.max(80, Math.min(W*0.34, H*0.18)); CX=W/2; CY=H*0.44; }
     else if(phone){ R=Math.max(90, Math.min(W*0.46, H*0.3)); CX=W/2; CY=H*0.36; }
-    else if(intro){ R=Math.max(90, Math.min(W*0.2, H*0.24)); CX=W/2; CY=H*0.47; }
+    else if(intro){ R=Math.max(90, Math.min(W*0.2, H*0.21)); CX=W/2; CY=H*0.41; }
     else { R=Math.max(90, Math.min(W*0.25, H*0.3)); CX=W/2; CY=H*0.4; }
     const wm=$('wordmark'); wm.style.top=(intro ? CY+R*1.45 : CY)+'px';
   }
@@ -1157,7 +1163,10 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     rerender=showIntro;
     $('app').classList.add('intro');
     speech.textContent='';
-    const b=document.createElement('button'); b.type='button'; b.className='startbtn'; b.textContent=L().startBtn; b.onclick=leaveIntro; speech.appendChild(b);
+    const tg=document.createElement('p'); tg.className='tagline'; tg.textContent=L().tagline;
+    const ts=document.createElement('p'); ts.className='tagsub'; ts.textContent=L().tagsub;
+    const b=document.createElement('button'); b.type='button'; b.className='startbtn'; b.textContent=L().startBtn; b.onclick=leaveIntro;
+    speech.append(tg, ts, b);
     resize(); startHints();
   }
   function leaveIntro(){
