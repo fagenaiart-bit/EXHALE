@@ -198,6 +198,13 @@
   .linkbtn:hover{color:var(--text-secondary);}
   /* start screen: sphere + drifting hints */
   .hints{position:absolute; inset:0; pointer-events:none; z-index:1; overflow:hidden;}
+  .caption{position:absolute; left:50%; top:0; transform:translate(-50%,-50%); margin:0; width:max-content; max-width:calc(100% - 32px); text-align:center; text-wrap:balance;
+    font:500 18px/26px var(--font-sans); letter-spacing:.01em; color:var(--text-secondary); text-shadow:0 1px 14px #080a0a;
+    opacity:0; filter:blur(5px); transition:opacity .9s ease, filter .9s ease;}
+  .caption.show{opacity:1; filter:blur(0);}
+  .caption.acc{color:var(--aqua-400);}
+  @media (max-width:640px){ .caption{font-size:16px; line-height:24px;} }
+  @media (prefers-reduced-motion: reduce){ .caption{transition:none; filter:none;} }
   .hint{position:absolute; left:0; top:0; white-space:nowrap; font:500 15px/20px var(--font-sans); color:var(--text-secondary);
     text-shadow:0 1px 12px #080a0a, 0 0 2px #080a0a; opacity:0; animation:hintLife 6.4s ease-in-out forwards;}
   .hint.acc{color:var(--aqua-400);}
@@ -328,7 +335,7 @@
       note:'Лише рахунок, без порад.',
       micOn:'Слухаю українською. Кожна фраза полетить у сферу. Торкнись сфери ще раз, щоб зупинити.', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори. Або пиши нижче.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
       startBtn:'Торкнись сфери, щоб почати',
-      hints:['Приватно','Лише на твоєму телефоні','Без оцінок','Без порад','Говори або пиши','Щоденник під PIN-кодом','Кожне слово — дослівно','Настрій і тіло день за днем','Безкоштовно, без реєстрації','Просто дзеркало'],
+      hints:['Приватно. Лише на твоєму телефоні.','Без оцінок. Без порад.','Говори або пиши — як є.','Щоденник під PIN-кодом.','Настрій і тіло — день за днем.','Безкоштовно, без реєстрації.'],
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
       searchPh:'Пошук у записах, напр. «мама»', searchLabel:'Пошук у записах', searchClear:'Очистити пошук', searchNone:'Нічого не знайдено.',
       searchFound:(t,e)=>`Знайдено ${t} ${pluralUk(t,'думку','думки','думок')} у ${e} ${pluralUk(e,'записі','записах','записах')}`,
@@ -378,7 +385,7 @@
       note:'Counts only, no advice.',
       micOn:'Listening in English. Every phrase flies into the sphere. Tap the sphere again to stop.', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk. Or type below.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
       startBtn:'Tap the sphere to begin',
-      hints:['Private','Only on your phone','No judgement','No advice','Talk or type','Journal locked with a PIN','Every word, as you said it','Mood and body, day by day','Free, no sign-up','Just a mirror'],
+      hints:['Private. Only on your phone.','No judgement. No advice.','Talk or type — just as it is.','Your journal is locked with a PIN.','Mood and body, day by day.','Free, no sign-up.'],
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
       searchPh:'Search entries, e.g. “mom”', searchLabel:'Search entries', searchClear:'Clear search', searchNone:'Nothing found.',
       searchFound:(t,e)=>`Found ${t} ${t===1?'thought':'thoughts'} in ${e} ${e===1?'entry':'entries'}`,
@@ -449,13 +456,13 @@
     const intro=$('app').classList.contains('intro');
     if(phone && intro){ R=Math.max(80, Math.min(W*0.3, H*0.17)); CX=W/2; CY=H*0.45; }
     else if(phone){ R=Math.max(90, Math.min(W*0.46, H*0.3)); CX=W/2; CY=H*0.36; }
-    else if(intro){ R=Math.max(90, Math.min(W*0.2, H*0.27)); CX=W/2; CY=H*0.45; }
+    else if(intro){ R=Math.max(90, Math.min(W*0.2, H*0.24)); CX=W/2; CY=H*0.42; }
     else { R=Math.max(90, Math.min(W*0.25, H*0.3)); CX=W/2; CY=H*0.4; }
     const wm=$('wordmark'); wm.style.top=(intro ? CY+R*1.45 : CY)+'px';
   }
   addEventListener('resize', resize);
   let roT=null, lastSize='';
-  if(window.ResizeObserver) new ResizeObserver(()=>{ clearTimeout(roT); roT=setTimeout(()=>{ const r=stage.getBoundingClientRect(), key=Math.round(r.width)+'x'+Math.round(r.height); resize(); if(key!==lastSize){ lastSize=key; if(rerender===showIntro) startHints(); } }, 150); }).observe(stage);
+  if(window.ResizeObserver) new ResizeObserver(()=>{ clearTimeout(roT); roT=setTimeout(()=>{ const r=stage.getBoundingClientRect(), key=Math.round(r.width)+'x'+Math.round(r.height); resize(); if(key!==lastSize){ lastSize=key; placeCaption(); } }, 150); }).observe(stage);
   const ROWS=58, COLS=104, pts=[];
   for(let i=1;i<ROWS;i++){
     const lat=-Math.PI/2+Math.PI*i/ROWS, y=Math.sin(lat), rr=Math.cos(lat);
@@ -1130,33 +1137,23 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   }
   document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; try{localStorage.setItem('exhale-lang',lang);}catch(e){} applyLang(); });
   /* ---------- start screen ---------- */
-  const ACC=new Set([0,1,5]);
-  const SLOTS=[-128,-52,-160,-20,160,20,-100,-80];
-  let hintT=null, hintN=0, hintTO=[];
-  function spawnHint(){
-    const list=L().hints, i=hintN%list.length, a=SLOTS[hintN%SLOTS.length]*Math.PI/180;
-    hintN++;
-    const el=document.createElement('span'); el.className='hint'+(ACC.has(i)?' acc':''); el.textContent=list[i];
-    $('hints').appendChild(el);
-    const w=el.offsetWidth, h=el.offsetHeight;
-    let x, y;
-    if(matchMedia('(max-width:640px)').matches){
-      const k=(hintN-1)%6, up=k%2===0, row=Math.floor(k/2);
-      const jit=[-0.12,0.1,-0.02,0.13,0.08,-0.1][k];
-      x=W*(0.5+jit) - w/2;
-      y=up ? CY-R*1.35-row*46 - h/2 : CY+R*1.45+54+row*44 - h/2;
-    } else { x=CX+Math.cos(a)*R*1.32 - w/2; y=CY+Math.sin(a)*R*1.22 - h/2; }
-    x=Math.max(16, Math.min(W-w-16, x)); y=Math.max(64, Math.min(H-h-24, y));
-    el.style.transform=`translate(${x.toFixed(0)}px,${y.toFixed(0)}px)`;
-    if(!reduce) setTimeout(()=>el.remove(), 6600);
+  /* one calm caption at a time, under the wordmark: fade in, hold, fade out */
+  const ACC=new Set([0,3]);
+  let capT=null, capN=0;
+  function placeCaption(){ const c=$('hints').querySelector('.caption'); if(c) c.style.top=(CY+R*1.45+ (matchMedia('(max-width:640px)').matches?52:64))+'px'; }
+  function nextCaption(){
+    const box=$('hints'); let c=box.querySelector('.caption');
+    if(!c){ c=document.createElement('p'); c.className='caption'; box.appendChild(c); }
+    const list=L().hints, i=capN++%list.length;
+    c.classList.remove('show');
+    capT=setTimeout(()=>{
+      c.textContent=list[i]; c.classList.toggle('acc', ACC.has(i)); placeCaption();
+      requestAnimationFrame(()=>c.classList.add('show'));
+      capT=setTimeout(nextCaption, reduce?4200:3600);
+    }, capN===1 ? 500 : (reduce?0:1000));
   }
-  function startHints(){
-    clearInterval(hintT); hintTO.forEach(clearTimeout); hintTO=[]; $('hints').textContent=''; hintN=0;
-    if(reduce){ for(let k=0;k<6;k++) spawnHint(); return; }
-    for(let k=0;k<3;k++) hintTO.push(setTimeout(spawnHint, 250+k*700));
-    hintT=setInterval(spawnHint, 1500);
-  }
-  function stopHints(){ clearInterval(hintT); hintT=null; hintTO.forEach(clearTimeout); hintTO=[]; $('hints').querySelectorAll('.hint').forEach(h=>{ h.style.transition='opacity .4s'; h.style.opacity='0'; setTimeout(()=>h.remove(), 450); }); }
+  function startHints(){ clearTimeout(capT); $('hints').textContent=''; capN=0; nextCaption(); }
+  function stopHints(){ clearTimeout(capT); capT=null; const c=$('hints').querySelector('.caption'); if(c){ c.classList.remove('show'); setTimeout(()=>{ if(rerender!==showIntro) $('hints').textContent=''; }, 900); } }
   function showIntro(){
     rerender=showIntro;
     $('app').classList.add('intro');
