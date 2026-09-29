@@ -50,12 +50,14 @@
   .stage:focus-visible{outline:none;}
   .stage:focus-visible canvas{outline:2px solid var(--aqua-600); outline-offset:-8px; border-radius:24px;}
   .speech small.live{color:var(--aqua-400); font-size:15px; line-height:22px; min-height:22px;}
-  .wordmark{position:absolute; left:50%; transform:translate(-50%,-50%); display:flex; gap:.62em; font:600 22px/1 var(--font-mono); pointer-events:none; z-index:1;}
-  .wordmark span{color:#4a5452; animation:sweep 4.8s ease-in-out infinite;}
-  .wordmark span.dim{animation:none; color:#4a5452;}
-  @keyframes sweep{0%,100%{color:#6ff5e6; text-shadow:0 0 10px #2feada66} 45%{color:#effffc; text-shadow:0 0 16px #2feadaaa} 70%{color:#6ff5e6; text-shadow:0 0 10px #2feada66}}
-  @media (prefers-reduced-motion: reduce){ .wordmark span{animation:none; color:#6ff5e6;} .wordmark span.dim{color:#4a5452;} }
-  @media (max-width:420px){ .wordmark{font-size:18px;} }
+  .wordmark{position:absolute; left:50%; transform:translate(-50%,-50%); display:flex; gap:.5em; font:700 24px/1 var(--font-mono); pointer-events:none; z-index:1; transition:top .6s cubic-bezier(.2,.8,.2,1), font-size .6s;
+    text-shadow:0 0 18px #080a0a, 0 0 6px #080a0a;}
+  .app.intro .wordmark{font-size:38px; gap:.55em;}
+  .wordmark span{color:#6ff5e6; animation:sweep 4.8s ease-in-out infinite both;}
+  .wordmark span.dim{animation:none; color:#76807e;}
+  @keyframes sweep{0%,100%{color:#6ff5e6; text-shadow:0 0 12px #2feada88, 0 0 18px #080a0a} 45%{color:#effffc; text-shadow:0 0 18px #2feadacc, 0 0 18px #080a0a} 70%{color:#6ff5e6; text-shadow:0 0 12px #2feada88, 0 0 18px #080a0a}}
+  @media (prefers-reduced-motion: reduce){ .wordmark span{animation:none; color:#6ff5e6;} .wordmark span.dim{color:#76807e;} }
+  @media (max-width:640px){ .wordmark{font-size:20px;} .app.intro .wordmark{font-size:30px;} }
   .speech{position:relative; z-index:2; text-align:center; padding:0 24px; margin:0 auto; max-width:23em; min-height:88px;}
   .speech p{margin:0; font-size:17px; line-height:28px; color:var(--text-primary); text-wrap:balance;}
   .speech p.big{font-size:26px; line-height:32px; font-weight:700; letter-spacing:-.01em;}
@@ -126,7 +128,7 @@
   .checkin.leaving{opacity:0; transform:translateY(8px); pointer-events:none;}
   .ico{display:inline-block; width:16px; height:16px; vertical-align:-3px; flex:none;}
   /* brand in top bar (phones) */
-  .brand{display:none; gap:.5em; font:600 14px/1 var(--font-mono);}
+  .brand{display:none!important; gap:.5em; font:600 14px/1 var(--font-mono);}
   .brand span{color:#4a5452;} .brand span.on{color:#6ff5e6; text-shadow:0 0 10px #2feada66;}
   /* panel: tabs, diary, analytics */
   .tabs, .seg{display:flex; gap:4px; padding:3px; border:1px solid var(--border-hairline); border-radius:999px; width:max-content; max-width:100%;}
@@ -203,6 +205,7 @@
   .app.intro .dock, .app.intro #count, .app.intro #open-stats{visibility:hidden; pointer-events:none;}
   .app.intro .dock{display:none;}
   .app.intro .stage{cursor:pointer;}
+  .app.intro::after{display:none;}
   .startbtn{font:500 14px/20px var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); background:none; border:0; cursor:pointer; padding:10px 14px; animation:breathe 4s ease-in-out infinite;}
   .startbtn:hover{color:var(--text-primary);}
   @keyframes breathe{50%{color:var(--text-secondary)}}
@@ -227,8 +230,6 @@
     .app::after{content:""; position:absolute; left:0; right:0; bottom:0; height:52%; z-index:1; pointer-events:none;
       background:linear-gradient(to bottom, rgba(8,10,10,0) 0%, rgba(8,10,10,.72) 38%, rgba(8,10,10,.94) 70%);}
     .speech{margin-top:auto; text-shadow:0 1px 12px #080a0a;}
-    .wordmark{display:none;}
-    .brand{display:flex;}
     #count{display:none;}
     .bar{grid-template-columns:112px 1fr 30px;}
   }
@@ -239,10 +240,6 @@
     .app::after{content:""; position:absolute; left:0; right:0; bottom:0; height:46%; z-index:1; pointer-events:none;
       background:linear-gradient(to bottom, rgba(8,10,10,0) 0%, rgba(8,10,10,.6) 40%, rgba(8,10,10,.92) 72%);}
     .speech{margin-top:auto; text-shadow:0 1px 14px #080a0a;}
-    .wordmark{display:none;}
-    .app.intro .wordmark{display:flex;}
-    .brand{display:flex; font-size:15px;}
-    .app.intro .brand{visibility:hidden;}
   }
 </style>
 
@@ -454,9 +451,11 @@
     else if(phone){ R=Math.max(90, Math.min(W*0.46, H*0.3)); CX=W/2; CY=H*0.36; }
     else if(intro){ R=Math.max(90, Math.min(W*0.2, H*0.27)); CX=W/2; CY=H*0.45; }
     else { R=Math.max(90, Math.min(W*0.25, H*0.3)); CX=W/2; CY=H*0.4; }
-    const wm=$('wordmark'); wm.style.top=(CY+R*1.42)+'px';
+    const wm=$('wordmark'); wm.style.top=(intro ? CY+R*1.45 : CY)+'px';
   }
   addEventListener('resize', resize);
+  let roT=null, lastSize='';
+  if(window.ResizeObserver) new ResizeObserver(()=>{ clearTimeout(roT); roT=setTimeout(()=>{ const r=stage.getBoundingClientRect(), key=Math.round(r.width)+'x'+Math.round(r.height); resize(); if(key!==lastSize){ lastSize=key; if(rerender===showIntro) startHints(); } }, 150); }).observe(stage);
   const ROWS=58, COLS=104, pts=[];
   for(let i=1;i<ROWS;i++){
     const lat=-Math.PI/2+Math.PI*i/ROWS, y=Math.sin(lat), rr=Math.cos(lat);
@@ -1132,8 +1131,8 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; try{localStorage.setItem('exhale-lang',lang);}catch(e){} applyLang(); });
   /* ---------- start screen ---------- */
   const ACC=new Set([0,1,5]);
-  const SLOTS=[-128,-52,-160,-20,152,28,112,68];
-  let hintT=null, hintN=0;
+  const SLOTS=[-128,-52,-160,-20,160,20,-100,-80];
+  let hintT=null, hintN=0, hintTO=[];
   function spawnHint(){
     const list=L().hints, i=hintN%list.length, a=SLOTS[hintN%SLOTS.length]*Math.PI/180;
     hintN++;
@@ -1145,19 +1144,19 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       const k=(hintN-1)%6, up=k%2===0, row=Math.floor(k/2);
       const jit=[-0.12,0.1,-0.02,0.13,0.08,-0.1][k];
       x=W*(0.5+jit) - w/2;
-      y=up ? CY-R*1.35-row*46 - h/2 : CY+R*1.35+row*46 - h/2;
+      y=up ? CY-R*1.35-row*46 - h/2 : CY+R*1.45+54+row*44 - h/2;
     } else { x=CX+Math.cos(a)*R*1.32 - w/2; y=CY+Math.sin(a)*R*1.22 - h/2; }
     x=Math.max(16, Math.min(W-w-16, x)); y=Math.max(64, Math.min(H-h-24, y));
     el.style.transform=`translate(${x.toFixed(0)}px,${y.toFixed(0)}px)`;
     if(!reduce) setTimeout(()=>el.remove(), 6600);
   }
   function startHints(){
-    clearInterval(hintT); $('hints').textContent=''; hintN=0;
+    clearInterval(hintT); hintTO.forEach(clearTimeout); hintTO=[]; $('hints').textContent=''; hintN=0;
     if(reduce){ for(let k=0;k<6;k++) spawnHint(); return; }
-    for(let k=0;k<3;k++) setTimeout(spawnHint, 250+k*700);
+    for(let k=0;k<3;k++) hintTO.push(setTimeout(spawnHint, 250+k*700));
     hintT=setInterval(spawnHint, 1500);
   }
-  function stopHints(){ clearInterval(hintT); hintT=null; $('hints').querySelectorAll('.hint').forEach(h=>{ h.style.transition='opacity .4s'; h.style.opacity='0'; setTimeout(()=>h.remove(), 450); }); }
+  function stopHints(){ clearInterval(hintT); hintT=null; hintTO.forEach(clearTimeout); hintTO=[]; $('hints').querySelectorAll('.hint').forEach(h=>{ h.style.transition='opacity .4s'; h.style.opacity='0'; setTimeout(()=>h.remove(), 450); }); }
   function showIntro(){
     rerender=showIntro;
     $('app').classList.add('intro');
@@ -1174,7 +1173,6 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   }
   stage.addEventListener('click', e=>{ if(rerender===showIntro && onSphere(e.clientX,e.clientY)) leaveIntro(); });
   stage.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && rerender===showIntro){ e.preventDefault(); leaveIntro(); } });
-  addEventListener('resize', ()=>{ if(rerender===showIntro) startHints(); });
 
   applyLang();
   showIntro();
