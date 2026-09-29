@@ -186,6 +186,20 @@
   .pin .err{min-height:20px; color:#ed302a; font-size:14px;}
   .linkbtn{font:500 13px/18px var(--font-sans); color:var(--text-muted); background:none; border:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:4px;}
   .linkbtn:hover{color:var(--text-secondary);}
+  /* start screen: sphere + drifting hints */
+  .hints{position:absolute; inset:0; pointer-events:none; z-index:1; overflow:hidden;}
+  .hint{position:absolute; left:0; top:0; white-space:nowrap; font:500 15px/20px var(--font-sans); color:var(--text-secondary);
+    text-shadow:0 1px 12px #080a0a, 0 0 2px #080a0a; opacity:0; animation:hintLife 6.4s ease-in-out forwards;}
+  .hint.acc{color:var(--aqua-400);}
+  @keyframes hintLife{0%{opacity:0; translate:0 10px} 16%{opacity:1} 74%{opacity:1} 100%{opacity:0; translate:0 -22px}}
+  .app.intro .dock, .app.intro #count, .app.intro #open-stats{visibility:hidden; pointer-events:none;}
+  .app.intro .dock{display:none;}
+  .app.intro .stage{cursor:pointer;}
+  .startbtn{font:500 14px/20px var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); background:none; border:0; cursor:pointer; padding:10px 14px; animation:breathe 4s ease-in-out infinite;}
+  .startbtn:hover{color:var(--text-primary);}
+  @keyframes breathe{50%{color:var(--text-secondary)}}
+  @media (prefers-reduced-motion: reduce){ .hint{animation:none; opacity:.9;} .startbtn{animation:none;} }
+  @media (max-width:640px){ .hint{font-size:14px;} }
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
   @media (max-width:640px){
@@ -217,7 +231,7 @@
     </div>
   </div>
 
-  <div class="stage" id="stage" tabindex="-1"><canvas id="c" aria-hidden="true"></canvas><div class="wordmark" id="wordmark"></div></div>
+  <div class="stage" id="stage" tabindex="-1"><canvas id="c" aria-hidden="true"></canvas><div class="hints" id="hints" aria-hidden="true"></div><div class="wordmark" id="wordmark"></div></div>
 
   <div class="speech" id="speech" aria-live="polite">
 
@@ -285,6 +299,8 @@
       noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
       note:'Лише рахунок, без порад.',
       micOn:'Слухаю українською. Кожна фраза полетить у сферу. Торкнись сфери ще раз, щоб зупинити.', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори. Або пиши нижче.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
+      startBtn:'Торкнись сфери, щоб почати',
+      hints:['Приватно','Лише на твоєму телефоні','Без оцінок','Без порад','Говори або пиши','Щоденник під PIN-кодом','Кожне слово — дослівно','Настрій і тіло день за днем','Безкоштовно, без реєстрації','Просто дзеркало'],
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
       journal:'Щоденник', diary:'Записи', analytics:'Аналітика', week:'Тиждень', month:'Місяць', all:'Весь час',
       today:'Сьогодні', yesterday:'Вчора', noEntries:'За цей період записів немає.',
@@ -331,6 +347,8 @@
       noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
       note:'Counts only, no advice.',
       micOn:'Listening in English. Every phrase flies into the sphere. Tap the sphere again to stop.', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk. Or type below.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
+      startBtn:'Tap the sphere to begin',
+      hints:['Private','Only on your phone','No judgement','No advice','Talk or type','Journal locked with a PIN','Every word, as you said it','Mood and body, day by day','Free, no sign-up','Just a mirror'],
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
       journal:'Journal', diary:'Entries', analytics:'Analytics', week:'Week', month:'Month', all:'All time',
       today:'Today', yesterday:'Yesterday', noEntries:'No entries for this period.',
@@ -396,7 +414,9 @@
     const r = stage.getBoundingClientRect(), d = Math.min(2, devicePixelRatio||1);
     W=r.width; H=r.height; cv.width=W*d; cv.height=H*d; ctx.setTransform(d,0,0,d,0,0);
     const phone=matchMedia('(max-width:640px)').matches;
-    if(phone){ R=Math.max(90, Math.min(W*0.46, H*0.3)); CX=W/2; CY=H*0.36; }
+    const intro=$('app').classList.contains('intro');
+    if(phone && intro){ R=Math.max(80, Math.min(W*0.3, H*0.17)); CX=W/2; CY=H*0.45; }
+    else if(phone){ R=Math.max(90, Math.min(W*0.46, H*0.3)); CX=W/2; CY=H*0.36; }
     else { R = Math.max(64, Math.min(W*0.3, H*0.3, 170)); CX=W/2; CY=H*0.44; }
     const wm=$('wordmark'); wm.style.top=(CY+R*1.42)+'px';
   }
@@ -1032,8 +1052,54 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     if($('panel').classList.contains('open')) $('open-stats').click();
   }
   document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; try{localStorage.setItem('exhale-lang',lang);}catch(e){} applyLang(); });
+  /* ---------- start screen ---------- */
+  const ACC=new Set([0,1,5]);
+  const SLOTS=[-128,-52,-160,-20,152,28,112,68];
+  let hintT=null, hintN=0;
+  function spawnHint(){
+    const list=L().hints, i=hintN%list.length, a=SLOTS[hintN%SLOTS.length]*Math.PI/180;
+    hintN++;
+    const el=document.createElement('span'); el.className='hint'+(ACC.has(i)?' acc':''); el.textContent=list[i];
+    $('hints').appendChild(el);
+    const w=el.offsetWidth, h=el.offsetHeight;
+    let x, y;
+    if(matchMedia('(max-width:640px)').matches){
+      const k=(hintN-1)%6, up=k%2===0, row=Math.floor(k/2);
+      const jit=[-0.12,0.1,-0.02,0.13,0.08,-0.1][k];
+      x=W*(0.5+jit) - w/2;
+      y=up ? CY-R*1.35-row*46 - h/2 : CY+R*1.35+row*46 - h/2;
+    } else { x=CX+Math.cos(a)*R*1.32 - w/2; y=CY+Math.sin(a)*R*1.22 - h/2; }
+    x=Math.max(16, Math.min(W-w-16, x)); y=Math.max(64, Math.min(H-h-24, y));
+    el.style.transform=`translate(${x.toFixed(0)}px,${y.toFixed(0)}px)`;
+    if(!reduce) setTimeout(()=>el.remove(), 6600);
+  }
+  function startHints(){
+    clearInterval(hintT); $('hints').textContent=''; hintN=0;
+    if(reduce){ for(let k=0;k<6;k++) spawnHint(); return; }
+    for(let k=0;k<3;k++) setTimeout(spawnHint, 250+k*700);
+    hintT=setInterval(spawnHint, 1500);
+  }
+  function stopHints(){ clearInterval(hintT); hintT=null; $('hints').querySelectorAll('.hint').forEach(h=>{ h.style.transition='opacity .4s'; h.style.opacity='0'; setTimeout(()=>h.remove(), 450); }); }
+  function showIntro(){
+    rerender=showIntro;
+    $('app').classList.add('intro');
+    speech.textContent='';
+    const b=document.createElement('button'); b.type='button'; b.className='startbtn'; b.textContent=L().startBtn; b.onclick=leaveIntro; speech.appendChild(b);
+    resize(); startHints();
+  }
+  function leaveIntro(){
+    if(rerender!==showIntro) return;
+    $('app').classList.remove('intro'); stopHints(); resize();
+    pulse=performance.now(); kick();
+    requestAnimationFrame(resize);
+    startSession();
+  }
+  stage.addEventListener('click', e=>{ if(rerender===showIntro && onSphere(e.clientX,e.clientY)) leaveIntro(); });
+  stage.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && rerender===showIntro){ e.preventDefault(); leaveIntro(); } });
+  addEventListener('resize', ()=>{ if(rerender===showIntro) startHints(); });
+
   applyLang();
-  startSession();
+  showIntro();
   resize(); updateCount(); requestAnimationFrame(frame);
 })();
 </script>
