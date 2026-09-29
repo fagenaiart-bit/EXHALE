@@ -171,6 +171,9 @@
   .copybox .steps{margin:2px 0 6px; padding-left:22px; display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:21px; color:var(--text-secondary);}
   .copybox .steps li::marker{font-family:var(--font-mono); color:var(--aqua-600);}
   .copybox .foot{font-size:13px; line-height:18px; color:var(--text-muted);}
+  .copybox .warn{font-size:13px; line-height:19px; color:#e9c14d; border-left:0; padding:10px 12px; border-radius:10px; background:rgba(233,193,77,.07);}
+  .copybox .btns{display:flex; gap:8px; flex-wrap:wrap;}
+  .copybox{gap:12px;}
   .primary.sm{font-size:14px; padding:10px 18px;}
   /* PIN pad */
   .pin{display:flex; flex-direction:column; align-items:center; gap:18px; padding:28px 0 8px; text-align:center;}
@@ -325,7 +328,7 @@
       moodBeforeT:'Настрій до видиху', moodAfterT2:'Настрій після', bodyT:'Тіло', dayByDay:'День за днем',
       legMood:'верхня іконка: настрій до', legBody:'нижня: тіло',
       shiftLine:(b,s,w,n)=>`Після видиху настрій покращився ${b} ${pluralUk(b,'раз','рази','разів')} з ${n}, не змінився ${s}, погіршився ${w}.`,
-      copyT:'Скопіювати записи', copyNote:'Записи належать тобі. Можна скопіювати їх за обраний період, щоб зберегти окремо, перечитати деінде, показати психологу чи вставити в будь-який застосунок.', copyFoot:'Сам застосунок нічого нікуди не надсилає.', copyHead:p=>'Видихай — записи '+p,
+      copyT:'Глибший розбір чи розмова з психологом?', copyNote:'Видихай сам не аналізує твої думки, щоб вони не залишали телефон. Якщо хочеш поділитися ними, скопіюй записи.', copySteps:['Обери період угорі й натисни кнопку. «Для психолога» — лише записи. «Для ШІ» — записи разом із готовим запитом: знайти теми, що повторюються, без оцінок і порад.','Встав текст туди, куди вирішиш: у лист психологу чи в чат із ШІ.'], copyWarn:'Зверни увагу: це дуже особисте. Скопійований текст уже не захищений PIN-кодом, а ШІ-сервіси можуть зберігати те, що ти їм надсилаєш. Ділися лише з тими, кому довіряєш.', copyFoot:p=>'Копіюються записи '+p+'. Сам застосунок нічого нікуди не надсилає.', copyPsy:'Для психолога', copyAi:'Для ШІ', copyHead:p=>'Видихай — записи '+p,
       copyBtn:p=>'Скопіювати записи '+p, copied:'Скопійовано', copyFail:'Не вдалося скопіювати. Виділи текст нижче вручну.',
       copyPrompt:'Ось мій щоденник думок, настрою і стану тіла. Подивись, які теми повторюються, як вони пов\'язані з настроєм і тілом, і що змінюється після видиху. Без оцінок і без порад, тільки спостереження.',
       periodLabel:{week:'за тиждень',month:'за місяць',all:'за весь час'},
@@ -375,7 +378,7 @@
       moodBeforeT:'Mood before', moodAfterT2:'Mood after', bodyT:'Body', dayByDay:'Day by day',
       legMood:'top icon: mood before', legBody:'bottom: body',
       shiftLine:(b,s,w,n)=>`After exhaling, mood got better ${b} of ${n} times, stayed the same ${s}, got worse ${w}.`,
-      copyT:'Copy your entries', copyNote:'Your entries belong to you. Copy them for the chosen period to keep them elsewhere, reread them, show a therapist or paste them into any app.', copyFoot:'The app itself never sends anything anywhere.', copyHead:p=>'Exhale — entries '+p,
+      copyT:'A deeper look, or a talk with your therapist?', copyNote:'Exhale does not analyze your thoughts itself, so they never leave your phone. If you want to share them, copy your entries.', copySteps:['Choose a period above and tap a button. “For a therapist” copies just the entries. “For AI” adds a ready-made request: find recurring themes, no judgement and no advice.','Paste the text wherever you decide: an email to your therapist or a chat with an AI.'], copyWarn:'Keep in mind: this is very personal. Copied text is no longer protected by your PIN, and AI services may store what you send them. Share only with people you trust.', copyFoot:p=>'Copies entries for '+p+'. The app itself never sends anything anywhere.', copyPsy:'For a therapist', copyAi:'For AI', copyHead:p=>'Exhale — entries '+p,
       copyBtn:p=>'Copy entries for '+p, copied:'Copied', copyFail:'Could not copy. Select the text below manually.',
       copyPrompt:'Here is my journal of thoughts, mood and body. Look at which themes repeat, how they relate to mood and body, and what changes after exhaling. No judgement and no advice, only observations.',
       periodLabel:{week:'this week',month:'this month',all:'all time'},
@@ -972,25 +975,30 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     const s3=sec(t.bodyT); const b3=document.createElement('div'); b3.className='bars'; s3.appendChild(b3); bars(b3,'body',list);
     // copy for deeper analysis
     const cb=document.createElement('div'); cb.className='copybox';
-    cb.innerHTML='<h4></h4><p></p><button class="ghost" type="button"></button><p class="foot"></p>';
-    cb.querySelector('h4').textContent=t.copyT; cb.querySelector('p').textContent=t.copyNote;
-    cb.querySelector('.foot').textContent=t.copyFoot;
-    const btn=cb.querySelector('button'); const label=t.copyBtn(t.periodLabel[period]); btn.textContent=label;
-    btn.onclick=()=>{
-      if(hasLock() && !priv){
-        const pad=document.createElement('div'); cb.appendChild(pad); btn.hidden=true;
-        pinPad(pad, 'unlock', async()=>{ await openAll(list); renderAnalytics(); }, {sub:t.pinCopySub, onCancel:()=>renderAnalytics()});
-        return;
-      }
-      const fmt=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
-      const txt=t.copyHead(t.periodLabel[period])+'\n\n'+list.slice().sort((a,b)=>a.at-b.at).map(d=>{
-        const mb=[d.mood&&(t.mood[d.mood]), d.moodAfter&&('→ '+t.mood[d.moodAfter]), d.body&&(t.bodyT+': '+t.body[d.body])].filter(Boolean).join(' ');
-        return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+thoughtsOf(d).map(x=>'- '+x.text).join('\n');
-      }).join('\n\n');
-      const ok=()=>{ btn.textContent=t.copied; setTimeout(()=>btn.textContent=label, 3000); };
-      try{ navigator.clipboard.writeText(txt).then(ok, ()=>fallback()); }catch(e){ fallback(); }
-      function fallback(){ const ta2=document.createElement('textarea'); ta2.value=txt; ta2.style.cssText='width:100%;min-height:160px;margin-top:8px;background:var(--surface-sunk);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:10px;padding:10px;font:13px/18px var(--font-sans)'; cb.appendChild(ta2); ta2.select(); btn.textContent=t.copyFail; }
-    };
+    cb.innerHTML='<h4></h4><p class="intro"></p><ol class="steps"></ol><div class="btns"></div><p class="warn"></p><p class="foot"></p>';
+    cb.querySelector('h4').textContent=t.copyT; cb.querySelector('.intro').textContent=t.copyNote;
+    t.copySteps.forEach(x=>{ const li=document.createElement('li'); li.textContent=x; cb.querySelector('.steps').appendChild(li); });
+    cb.querySelector('.warn').textContent=t.copyWarn; cb.querySelector('.foot').textContent=t.copyFoot(t.periodLabel[period]);
+    const btns=cb.querySelector('.btns');
+    [['psy', t.copyPsy], ['ai', t.copyAi]].forEach(([kind, label])=>{
+      const btn=document.createElement('button'); btn.type='button'; btn.className='ghost'; btn.textContent=label; btns.appendChild(btn);
+      btn.onclick=()=>{
+        if(hasLock() && !priv){
+          btns.hidden=true; const pad=document.createElement('div'); cb.insertBefore(pad, cb.querySelector('.warn'));
+          pinPad(pad, 'unlock', async()=>{ await openAll(list); renderAnalytics(); }, {sub:t.pinCopySub, onCancel:()=>renderAnalytics()});
+          return;
+        }
+        const fmt=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+        const entries=list.slice().sort((a,b)=>a.at-b.at).map(d=>{
+          const mb=[d.mood&&(t.mood[d.mood]), d.moodAfter&&('→ '+t.mood[d.moodAfter]), d.body&&(t.bodyT+': '+t.body[d.body])].filter(Boolean).join(' ');
+          return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+thoughtsOf(d).map(x=>'- '+x.text).join('\n');
+        }).join('\n\n');
+        const txt=(kind==='ai' ? t.copyPrompt+'\n\n' : '')+t.copyHead(t.periodLabel[period])+'\n\n'+entries;
+        const ok=()=>{ btn.textContent=t.copied; setTimeout(()=>btn.textContent=label, 3000); };
+        try{ navigator.clipboard.writeText(txt).then(ok, ()=>fallback()); }catch(e){ fallback(); }
+        function fallback(){ const old=cb.querySelector('textarea'); if(old) old.remove(); const ta2=document.createElement('textarea'); ta2.value=txt; ta2.readOnly=true; ta2.style.cssText='width:100%;box-sizing:border-box;min-height:160px;background:var(--surface-sunk);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:10px;padding:10px;font:13px/18px var(--font-sans)'; btns.after(ta2); ta2.select(); btn.textContent=t.copyFail; }
+      };
+    });
     box.appendChild(cb);
   }
   $('tab-diary').onclick=()=>{ tab='diary'; render(viewDumps, viewExample); };
