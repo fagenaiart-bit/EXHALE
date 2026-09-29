@@ -205,6 +205,16 @@
   @keyframes breathe{50%{color:var(--text-secondary)}}
   @media (prefers-reduced-motion: reduce){ .hint{animation:none; opacity:.9;} .startbtn{animation:none;} }
   @media (max-width:640px){ .hint{font-size:14px;} }
+  .reps{display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
+  .reps .empty{padding:0;}
+  .rep{width:100%; box-sizing:border-box; background:var(--surface-raised); border:1px solid var(--border-hairline); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:10px;}
+  .rep-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .rep-head b{font-size:16px; line-height:22px; font-weight:600;}
+  .rep-n{font:500 13px/18px var(--font-mono); color:var(--aqua-400); font-variant-numeric:tabular-nums;}
+  .rep-head .moods{margin-left:auto;}
+  .rep ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px;}
+  .rep li{font-size:15px; line-height:22px; color:var(--text-secondary); overflow-wrap:anywhere;}
+  .rep li time{font:500 12px/18px var(--font-mono); color:var(--text-muted); margin-right:8px;}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
   @media (max-width:640px){
@@ -313,8 +323,9 @@
       moodBeforeT:'Настрій до видиху', moodAfterT2:'Настрій після', bodyT:'Тіло', dayByDay:'День за днем',
       legMood:'верхня іконка: настрій до', legBody:'нижня: тіло',
       shiftLine:(b,s,w,n)=>`Після видиху настрій покращився ${b} ${pluralUk(b,'раз','рази','разів')} з ${n}, не змінився ${s}, погіршився ${w}.`,
-      copyT:'Хочеш глибший розбір?', copyNote:'Видихай сам не аналізує твої думки, щоб вони не залишали телефон. Якщо хочеш, щоб штучний інтелект пошукав у них закономірності:', copySteps:['Натисни кнопку нижче. Записи за обраний період скопіюються разом із готовим запитом.','Відкрий Claude, ChatGPT чи інший ШІ-асистент.','Встав текст у чат і надішли.'], copyFoot:'Ділитися чи ні, вирішуєш ти. Застосунок нічого не надсилає сам.',
-      copyBtn:p=>'Скопіювати записи '+p, copied:'Скопійовано. Тепер встав у чат з ШІ.', copyFail:'Не вдалося скопіювати. Виділи текст нижче вручну.',
+      copyT:'Скопіювати записи', copyNote:'Записи належать тобі. Можна скопіювати їх за обраний період, щоб зберегти окремо, перечитати деінде, показати психологу чи вставити в будь-який застосунок.', copyFoot:'Сам застосунок нічого нікуди не надсилає.', copyHead:p=>'Видихай — записи '+p,
+      repT:'Думки, що повертаються', repNote:'Схожі думки групуються за спільними словами прямо на телефоні. Без ШІ й без інтернету.', repLocked:'Тут видно текст твоїх думок, тому розділ відкривається PIN-кодом.', repOpen:'Відкрити', repNone:'За цей період думки не повторювались.', repTimes:n=>`${n} ${pluralUk(n,'раз','рази','разів')}`, repMostly:'найчастіше', repPinSub:'Введи PIN-код, щоб побачити думки, що повертаються.',
+      copyBtn:p=>'Скопіювати записи '+p, copied:'Скопійовано', copyFail:'Не вдалося скопіювати. Виділи текст нижче вручну.',
       copyPrompt:'Ось мій щоденник думок, настрою і стану тіла. Подивись, які теми повторюються, як вони пов\'язані з настроєм і тілом, і що змінюється після видиху. Без оцінок і без порад, тільки спостереження.',
       periodLabel:{week:'за тиждень',month:'за місяць',all:'за весь час'},
       wordsT:'Слова, що повертаються', historyT:'Усі видихи',
@@ -361,8 +372,9 @@
       moodBeforeT:'Mood before', moodAfterT2:'Mood after', bodyT:'Body', dayByDay:'Day by day',
       legMood:'top icon: mood before', legBody:'bottom: body',
       shiftLine:(b,s,w,n)=>`After exhaling, mood got better ${b} of ${n} times, stayed the same ${s}, got worse ${w}.`,
-      copyT:'Want a deeper look?', copyNote:'Exhale does not analyze your thoughts itself, so they never leave your phone. If you want an AI to look for patterns in them:', copySteps:['Tap the button below. Entries for the chosen period are copied together with a ready-made request.','Open Claude, ChatGPT or another AI assistant.','Paste the text into the chat and send it.'], copyFoot:'Sharing is your choice. The app never sends anything on its own.',
-      copyBtn:p=>'Copy entries for '+p, copied:'Copied. Now paste it into your AI chat.', copyFail:'Could not copy. Select the text below manually.',
+      copyT:'Copy your entries', copyNote:'Your entries belong to you. Copy them for the chosen period to keep them elsewhere, reread them, show a therapist or paste them into any app.', copyFoot:'The app itself never sends anything anywhere.', copyHead:p=>'Exhale — entries '+p,
+      repT:'Thoughts that keep coming back', repNote:'Similar thoughts are grouped by shared words right on your phone. No AI, no internet.', repLocked:'This shows the text of your thoughts, so it opens with your PIN.', repOpen:'Open', repNone:'No thoughts repeated in this period.', repTimes:n=>`${n} ${n===1?'time':'times'}`, repMostly:'mostly', repPinSub:'Enter your PIN to see thoughts that keep coming back.',
+      copyBtn:p=>'Copy entries for '+p, copied:'Copied', copyFail:'Could not copy. Select the text below manually.',
       copyPrompt:'Here is my journal of thoughts, mood and body. Look at which themes repeat, how they relate to mood and body, and what changes after exhaling. No judgement and no advice, only observations.',
       periodLabel:{week:'this week',month:'this month',all:'all time'},
       wordsT:'Words that keep coming back', historyT:'All exhales',
@@ -911,6 +923,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       grid.appendChild(c);
     }
     const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML='<span></span><span></span>'; lg.children[0].textContent=t.legMood; lg.children[1].textContent=t.legBody; dd.appendChild(lg);
+    // renderRepeats(sec(t.repT), list);  // parked: word-based grouping, waiting for a decision
     // shift
     const pairs=list.filter(d=>d.mood&&d.moodAfter);
     if(pairs.length){
@@ -922,9 +935,8 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     const s3=sec(t.bodyT); const b3=document.createElement('div'); b3.className='bars'; s3.appendChild(b3); bars(b3,'body',list);
     // copy for deeper analysis
     const cb=document.createElement('div'); cb.className='copybox';
-    cb.innerHTML='<h4></h4><p></p><ol class="steps"></ol><button class="primary sm" type="button"></button><p class="foot"></p>';
+    cb.innerHTML='<h4></h4><p></p><button class="ghost" type="button"></button><p class="foot"></p>';
     cb.querySelector('h4').textContent=t.copyT; cb.querySelector('p').textContent=t.copyNote;
-    t.copySteps.forEach(x=>{ const li=document.createElement('li'); li.textContent=x; cb.querySelector('ol').appendChild(li); });
     cb.querySelector('.foot').textContent=t.copyFoot;
     const btn=cb.querySelector('button'); const label=t.copyBtn(t.periodLabel[period]); btn.textContent=label;
     btn.onclick=()=>{
@@ -934,7 +946,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
         return;
       }
       const fmt=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
-      const txt=t.copyPrompt+'\n\n'+list.slice().sort((a,b)=>a.at-b.at).map(d=>{
+      const txt=t.copyHead(t.periodLabel[period])+'\n\n'+list.slice().sort((a,b)=>a.at-b.at).map(d=>{
         const mb=[d.mood&&(t.mood[d.mood]), d.moodAfter&&('→ '+t.mood[d.moodAfter]), d.body&&(t.bodyT+': '+t.body[d.body])].filter(Boolean).join(' ');
         return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+thoughtsOf(d).map(x=>'- '+x.text).join('\n');
       }).join('\n\n');
@@ -943,6 +955,51 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       function fallback(){ const ta2=document.createElement('textarea'); ta2.value=txt; ta2.style.cssText='width:100%;min-height:160px;margin-top:8px;background:var(--surface-sunk);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:10px;padding:10px;font:13px/18px var(--font-sans)'; cb.appendChild(ta2); ta2.select(); btn.textContent=t.copyFail; }
     };
     box.appendChild(cb);
+  }
+  /* thoughts that keep coming back: grouped on-device by shared significant words */
+  function groupRepeats(list){
+    const items=[];
+    list.forEach((d,di)=>thoughtsOf(d).forEach(t=>{ const st=new Set(words(t.text).map(stem)); if(st.size) items.push({d, di, text:t.text, st, forms:words(t.text)}); }));
+    const parent=items.map((_,i)=>i), find=i=>parent[i]===i?i:(parent[i]=find(parent[i]));
+    for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){
+      const a=items[i].st, b=items[j].st; let n=0; a.forEach(x=>{ if(b.has(x)) n++; });
+      if(n && n/Math.min(a.size,b.size)>=0.5) parent[find(i)]=find(j);
+    }
+    const groups=new Map(); items.forEach((it,i)=>{ const r=find(i); if(!groups.has(r)) groups.set(r,[]); groups.get(r).push(it); });
+    return [...groups.values()].filter(g=>new Set(g.map(x=>x.di)).size>1).map(g=>{
+      const cnt={}; g.forEach(it=>{ const seen=new Set(); it.forms.forEach(w=>{ const k=stem(w); if(seen.has(k)) return; seen.add(k); cnt[k]=cnt[k]||{n:0, forms:{}}; cnt[k].n++; cnt[k].forms[w]=(cnt[k].forms[w]||0)+1; }); });
+      const topStem=Object.entries(cnt).sort((a,b)=>b[1].n-a[1].n)[0][1];
+      const word=Object.entries(topStem.forms).sort((a,b)=>b[1]-a[1])[0][0];
+      const moods={}; g.forEach(it=>{ const m=it.d.mood; if(m) moods[m]=(moods[m]||0)+1; });
+      const mood=(Object.entries(moods).sort((a,b)=>b[1]-a[1])[0]||[])[0];
+      return {label:word.charAt(0).toUpperCase()+word.slice(1), times:new Set(g.map(x=>x.di)).size, items:g.slice().sort((a,b)=>b.d.at-a.d.at), mood};
+    }).sort((a,b)=>b.times-a.times).slice(0,8);
+  }
+  function renderRepeats(sec, list){
+    const t=L();
+    const body=document.createElement('div'); body.className='reps'; sec.appendChild(body);
+    if(hasLock() && !priv && list.some(d=>d.enc)){
+      const p=document.createElement('p'); p.className='empty'; p.textContent=t.repLocked;
+      const b=document.createElement('button'); b.type='button'; b.className='ghost'; b.textContent=t.repOpen;
+      b.onclick=()=>{ body.textContent=''; const pad=document.createElement('div'); pad.style.width='100%'; body.appendChild(pad);
+        pinPad(pad,'unlock', async()=>{ await openAll(viewDumps); renderAnalytics(); }, {sub:t.repPinSub, onCancel:()=>renderAnalytics()}); };
+      body.append(p, b); return;
+    }
+    const groups=groupRepeats(list);
+    if(!groups.length){ const p=document.createElement('p'); p.className='empty'; p.textContent=t.repNone; body.appendChild(p); }
+    const df=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric', month:'short'});
+    groups.forEach(g=>{
+      const card=document.createElement('div'); card.className='rep';
+      const h=document.createElement('div'); h.className='rep-head';
+      const nm=document.createElement('b'); nm.textContent=g.label;
+      const n=document.createElement('span'); n.className='rep-n'; n.textContent=t.repTimes(g.times);
+      h.append(nm, n);
+      if(g.mood){ const m=document.createElement('span'); m.className='moods'; m.innerHTML=icon(g.mood)+'<span></span>'; m.lastChild.textContent=t.repMostly+' '+t.mood[g.mood].toLowerCase(); h.appendChild(m); }
+      const ul=document.createElement('ul');
+      g.items.slice(0,3).forEach(it=>{ const li=document.createElement('li'); const tm=document.createElement('time'); tm.textContent=df.format(new Date(it.d.at)); li.append(tm, it.text); ul.appendChild(li); });
+      card.append(h, ul); body.appendChild(card);
+    });
+    const note=document.createElement('p'); note.className='legend'; note.textContent=t.repNote; body.appendChild(note);
   }
   $('tab-diary').onclick=()=>{ tab='diary'; render(viewDumps, viewExample); };
   $('tab-an').onclick=()=>{ tab='an'; render(viewDumps, viewExample); };
