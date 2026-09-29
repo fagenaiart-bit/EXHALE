@@ -50,9 +50,12 @@
   .stage:focus-visible{outline:none;}
   .stage:focus-visible canvas{outline:2px solid var(--aqua-600); outline-offset:-8px; border-radius:24px;}
   .speech small.live{color:var(--aqua-400); font-size:15px; line-height:22px; min-height:22px;}
-  .wordmark{position:absolute; left:50%; transform:translate(-50%,-50%); display:flex; gap:.5em; font:700 24px/1 var(--font-mono); pointer-events:none; z-index:1; transition:top .6s cubic-bezier(.2,.8,.2,1), font-size .6s;
+  .wordmark{position:absolute; left:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; font:700 24px/1 var(--font-mono); pointer-events:none; z-index:1; transition:top .6s cubic-bezier(.2,.8,.2,1), font-size .6s;
     text-shadow:0 0 18px #080a0a, 0 0 6px #080a0a;}
-  .app.intro .wordmark{font-size:38px; gap:.55em;}
+  .app.intro .wordmark{font-size:38px;}
+  .wordmark .letters{display:flex; gap:.5em;}
+  .wordmark .wmsub{margin-top:.6em; font-size:.42em; font-weight:600; letter-spacing:.34em; text-transform:uppercase; color:var(--aqua-400); text-shadow:0 0 12px #2feada66, 0 0 14px #080a0a; padding-left:.34em;}
+  .app:not(.intro) .wordmark .wmsub{display:none;}
   .wordmark span{color:#6ff5e6; animation:sweep 4.8s ease-in-out infinite both;}
   .wordmark span.dim{animation:none; color:#76807e;}
   @keyframes sweep{0%,100%{color:#6ff5e6; text-shadow:0 0 12px #2feada88, 0 0 18px #080a0a} 45%{color:#effffc; text-shadow:0 0 18px #2feadacc, 0 0 18px #080a0a} 70%{color:#6ff5e6; text-shadow:0 0 12px #2feada88, 0 0 18px #080a0a}}
@@ -212,7 +215,7 @@
   .app.intro .dock{display:none;}
   .app.intro .stage{cursor:pointer;}
   .app.intro::after{display:none;}
-  .speech .tagline{margin:0 auto; max-width:22em; font:600 19px/27px var(--font-sans); color:var(--text-primary); text-wrap:balance;}
+  .speech .tagline{margin:0 auto 18px; max-width:22em; font:600 19px/27px var(--font-sans); color:var(--text-primary); text-wrap:balance;}
   .speech .tagsub{margin:6px auto 16px; font-size:14px; line-height:20px; font-weight:400; color:var(--text-muted);}
   .app.intro .speech{padding-bottom:6vh; max-width:30em;}
   @media (max-width:640px){ .speech .tagline{font-size:17px; line-height:24px;} .speech .tagsub{font-size:13px;} .app.intro .speech{padding-bottom:4vh;} }
@@ -337,7 +340,7 @@
       noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
       note:'Лише рахунок, без порад.',
       micOn:'Слухаю українською. Кожна фраза полетить у сферу. Торкнись сфери ще раз, щоб зупинити.', micOff:'Мікрофон вимкнено.', micLabel:'Торкнись сфери, щоб говорити', tapSphere:'Торкнись сфери й говори. Або пиши нижче.', listenTitle:'Слухаю…', noVoice:'Тут голос не підтримується. Спробуй Chrome або Safari, або пиши текстом.', micDenied:'Немає доступу до мікрофона. Дозволь його в налаштуваннях браузера або пиши текстом.', speech:'uk-UA',
-      tagline:'Скажи все, що крутиться в голові, — і видихни.', tagsub:'Щоденник думок, настрою й самопочуття.',
+      tagline:'Скажи все, що крутиться в голові, — і видихни.', wmsub:'Твій щоденник',
       startBtn:'Торкнись сфери, щоб почати',
       hints:['Приватно. Лише на твоєму телефоні.','Без оцінок. Без порад.','Говори або пиши — як є.','Щоденник під PIN-кодом.','Настрій і тіло — день за днем.','Безкоштовно, без реєстрації.'],
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
@@ -388,7 +391,7 @@
       noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
       note:'Counts only, no advice.',
       micOn:'Listening in English. Every phrase flies into the sphere. Tap the sphere again to stop.', micOff:'Mic is off.', micLabel:'Tap the sphere to speak', tapSphere:'Tap the sphere and talk. Or type below.', listenTitle:'Listening…', noVoice:'Voice is not supported here. Try Chrome or Safari, or type instead.', micDenied:'No microphone access. Allow it in your browser settings, or type instead.', speech:'en-US',
-      tagline:'Say everything that’s spinning in your head — and exhale.', tagsub:'A journal of thoughts, mood and body.',
+      tagline:'Say everything that’s spinning in your head — and exhale.', wmsub:'Your journal',
       startBtn:'Tap the sphere to begin',
       hints:['Private. Only on your phone.','No judgement. No advice.','Talk or type — just as it is.','Your journal is locked with a PIN.','Mood and body, day by day.','Free, no sign-up.'],
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
@@ -1134,8 +1137,10 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     const br=$('brand'); br.textContent=''; [...t.name[0]].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; br.appendChild(sp); }); [...t.name[1]].forEach(ch=>{ const sp=document.createElement('span'); sp.className='on'; sp.textContent=ch; br.appendChild(sp); });
     const wm=$('wordmark'); wm.textContent=''; wm.setAttribute('aria-label', t.title);
     const [dim,lit]=t.name; let i=0;
-    [...dim].forEach(ch=>{ const sp=document.createElement('span'); sp.className='dim'; sp.textContent=ch; wm.appendChild(sp); });
-    [...lit].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; sp.style.animationDelay=(i++*0.3)+'s'; wm.appendChild(sp); });
+    const row=document.createElement('div'); row.className='letters'; wm.appendChild(row);
+    [...dim].forEach(ch=>{ const sp=document.createElement('span'); sp.className='dim'; sp.textContent=ch; row.appendChild(sp); });
+    [...lit].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; sp.style.animationDelay=(i++*0.3)+'s'; row.appendChild(sp); });
+    const sub=document.createElement('div'); sub.className='wmsub'; sub.textContent=t.wmsub; wm.appendChild(sub);
     document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.lang===lang?'true':'false'));
     rerender(); updateCount();
     if($('panel').classList.contains('open')) $('open-stats').click();
@@ -1164,9 +1169,8 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     $('app').classList.add('intro');
     speech.textContent='';
     const tg=document.createElement('p'); tg.className='tagline'; tg.textContent=L().tagline;
-    const ts=document.createElement('p'); ts.className='tagsub'; ts.textContent=L().tagsub;
     const b=document.createElement('button'); b.type='button'; b.className='startbtn'; b.textContent=L().startBtn; b.onclick=leaveIntro;
-    speech.append(tg, ts, b);
+    speech.append(tg, b);
     resize(); startHints();
   }
   function leaveIntro(){
