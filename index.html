@@ -54,6 +54,7 @@
     text-shadow:0 0 18px #080a0a, 0 0 6px #080a0a;}
   .app.intro .wordmark{font-size:38px;}
   .wordmark .letters{display:flex; gap:.5em;}
+  .speech .wmsub{margin:0 auto 18px; font:600 14px/20px var(--font-mono); letter-spacing:.34em; text-transform:uppercase; color:var(--aqua-400); text-shadow:0 0 12px #2feada66, 0 0 14px #080a0a; padding-left:.34em;}
   .wordmark .wmsub{margin-top:.6em; font-size:.42em; font-weight:600; letter-spacing:.34em; text-transform:uppercase; color:var(--aqua-400); text-shadow:0 0 12px #2feada66, 0 0 14px #080a0a; padding-left:.34em;}
   .app:not(.intro) .wordmark .wmsub{display:none;}
   .wordmark span{color:#6ff5e6; animation:sweep 4.8s ease-in-out infinite both;}
@@ -107,7 +108,7 @@
   .chip i{width:8px; height:8px; border-radius:50%; flex:none;}
   .chip:hover{border-color:var(--jade-300);}
   .chip[aria-pressed="true"]{border-color:var(--aqua-600); box-shadow:0 0 16px #2cb7af33;}
-  .cilabel{font:600 13px/20px var(--font-mono); letter-spacing:.3em; text-transform:uppercase; color:var(--aqua-400); text-shadow:0 0 12px #2feada55, 0 1px 12px #080a0a; padding-left:.3em; margin-top:4px;}
+  .cilabel{font:600 13px/20px var(--font-mono); letter-spacing:.3em; text-transform:uppercase; color:var(--aqua-400); text-shadow:0 0 12px #2feada55, 0 1px 12px #080a0a; padding-left:.3em; margin-top:14px;}
   .step{font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; color:var(--text-muted);}
   .tally{max-width:640px; margin:0 auto; display:flex; flex-wrap:wrap; gap:8px;}
   .tally span{display:flex; align-items:center; gap:8px; font-size:13px; line-height:18px; padding:6px 12px; border:1px solid var(--border-hairline); border-radius:999px; color:var(--text-secondary);}
@@ -124,8 +125,10 @@
   .danger{font:600 13px/18px var(--font-sans); color:var(--text-secondary); background:transparent; border:1px solid var(--border-hairline); border-radius:999px; padding:8px 14px; cursor:pointer;}
   .danger.armed{border-color:#ed302a; color:#ecf2f4; box-shadow:0 0 22px 0 #ed302a40;}
   /* check-in tiles */
-  .chips{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; max-width:420px;}
-  .chip{flex-direction:column; justify-content:center; gap:8px; padding:14px 8px; border-radius:16px; font-size:14px; line-height:18px; font-weight:500; min-height:84px;}
+  .chips{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; width:100%; max-width:520px;}
+  .chip{flex-direction:column; justify-content:center; gap:8px; padding:14px 4px; border-radius:16px; font-size:14px; line-height:18px; font-weight:500; min-height:84px; min-width:0;}
+  .chip span{max-width:100%; overflow-wrap:normal; hyphens:manual; text-align:center;}
+  @media (max-width:420px){ .chips{gap:6px;} .chip{padding:12px 2px; font-size:11.5px; letter-spacing:-.01em; min-height:78px; gap:7px;} .chip svg{width:24px; height:24px;} }
   .chip svg{width:26px; height:26px; flex:none;}
   .chip[aria-pressed="true"]{border-color:currentColor;}
   .checkin{transition:opacity .22s, transform .22s;}
@@ -216,7 +219,7 @@
   .app.intro .dock{display:none;}
   .app.intro .stage{cursor:pointer;}
   .app.intro::after{display:none;}
-  .speech .tagline{margin:0 auto 18px; max-width:22em; font:600 19px/27px var(--font-sans); color:var(--text-primary); text-wrap:balance;}
+  .speech .tagline{margin:0 auto 12px; max-width:22em; font:600 19px/27px var(--font-sans); color:var(--text-primary); text-wrap:balance;}
   .speech .tagsub{margin:6px auto 16px; font-size:14px; line-height:20px; font-weight:400; color:var(--text-muted);}
   .app.intro .speech{padding-bottom:6vh; max-width:30em;}
   @media (max-width:640px){ .speech .tagline{font-size:17px; line-height:24px;} .speech .tagsub{font-size:13px;} .app.intro .speech{padding-bottom:4vh;} }
@@ -284,7 +287,7 @@
       <div class="step" id="step"></div>
       <div class="chips" id="chips"></div>
       <div class="cilabel" id="cilabel"></div>
-      <button class="link" id="skip" type="button" data-t="skip"></button>
+      <button class="link" id="skip" type="button" data-t="skip" hidden></button>
     </div>
     <div class="field-wrap" id="field-wrap">
       <label class="sr" for="stream" data-t="fieldLabel"></label>
@@ -372,8 +375,8 @@
       wipe:'Видалити всі думки', wipeSure:'Точно? Натисни ще раз', wiped:'Видалено.',
       noRepeatsLong:'Поки нічого не повертається. Коли одне слово з\'явиться в різних видихах, воно стане тут.',
       again:'Новий видих', moodBefore:'Настрій до', moodAfterT:'Настрій після', shiftT:'Як змінився настрій', same:'без змін', bodyTitle:'Тіло', mostly:'Найчастіше: ',
-      mood:{calm:'Спокійно',joy:'Радісно',anxious:'Тривожно',sad:'Сумно',irritated:'Роздратовано',empty:'Порожньо'},
-      body:{good:'Добре',energetic:'Енергійно',tired:'Втомлено',weak:'Слабко',tense:'Напружено',pain:'Болить'},
+      mood:{calm:'Спокійно',joy:'Радісно',okay:'Нормально',empty:'Порожньо',anxious:'Тривожно',overwhelmed:'Перевантажено',sad:'Сумно',irritated:'Роздратовано'},
+      body:{good:'Добре',energetic:'Енергійно',okay:'Нормально',tired:'Втомлено',weak:'Слабко',restless:'Неспокійно',tense:'Напружено',pain:'Болить'},
       last:'Останнє: ', noRepeats:'Повторів поки немає.', aria:(t,n)=>`${t}: у ${n} видихах`,
       demoText:"Треба нарешті відповісти орендодавцю про ремонт. І ще я так і не подзвонила мамі. Обкладинку для клієнта треба здати до п'ятниці, а я ще навіть не почала. Може я взагалі не встигну? Знову думаю, чи правильно я пішла з тієї роботи. Купити фільтр для води. Орендодавець, мабуть, злиться, що я мовчу.",
       example:[
@@ -424,8 +427,8 @@
       wipe:'Delete all thoughts', wipeSure:'Sure? Tap again', wiped:'Deleted.',
       noRepeatsLong:'Nothing keeps coming back yet. When the same word shows up in different exhales, it will appear here.',
       again:'New exhale', moodBefore:'Mood before', moodAfterT:'Mood after', shiftT:'How the mood shifted', same:'no change', bodyTitle:'Body', mostly:'Mostly ',
-      mood:{calm:'Calm',joy:'Happy',anxious:'Anxious',sad:'Sad',irritated:'Irritated',empty:'Empty'},
-      body:{good:'Good',energetic:'Energetic',tired:'Tired',weak:'Weak',tense:'Tense',pain:'In pain'},
+      mood:{calm:'Calm',joy:'Happy',okay:'Okay',empty:'Empty',anxious:'Anxious',overwhelmed:'Overwhelmed',sad:'Sad',irritated:'Irritated'},
+      body:{good:'Good',energetic:'Energetic',okay:'Okay',tired:'Tired',weak:'Weak',restless:'Restless',tense:'Tense',pain:'In pain'},
       last:'Latest: ', noRepeats:'No repeats yet.', aria:(t,n)=>`${t}: in ${n} exhales`,
       demoText:"I really need to answer the landlord about the repairs. And I still haven't called mom. The client cover is due Friday and I haven't even started. What if I don't make it? Again wondering if leaving that job was right. Buy a water filter. The landlord is probably annoyed that I'm silent.",
       example:[
@@ -438,9 +441,12 @@
   let lang='uk';
   try{ const v=localStorage.getItem('exhale-lang'); if(v==='en'||v==='uk') lang=v; else if(!/^uk|^ru/i.test(navigator.language||'')) lang='en'; }catch(e){}
   const L=()=>I18N[lang];
-  const TONE={calm:'#2cb7af',joy:'#48e075',anxious:'#e9c14d',sad:'#4fa1de',irritated:'#ed302a',empty:'#80838e',
+  const TONE={okay:'#8fb3ad',overwhelmed:'#f08c4a',restless:'#f08c4a',calm:'#2cb7af',joy:'#48e075',anxious:'#e9c14d',sad:'#4fa1de',irritated:'#ed302a',empty:'#80838e',
               good:'#48e075',energetic:'#2feada',tired:'#4fa1de',weak:'#80838e',tense:'#e9c14d',pain:'#ed302a'};
   const ICONS={
+    okay:'<path d="M4 12a8 8 0 1 0 16 0a8 8 0 1 0-16 0M8.5 12h7"/>',
+    overwhelmed:'<path d="M3 7.5c2-2 4 2 6 0s4 2 6 0 4 2 6 0M3 12c2-2 4 2 6 0s4 2 6 0 4 2 6 0M3 16.5c2-2 4 2 6 0s4 2 6 0 4 2 6 0"/>',
+    restless:'<path d="M3 8h9M8 12h13M3 16h9M16 6.5l2 1.5-2 1.5M8 14.5l-2 1.5 2 1.5"/>',
     calm:'<path d="M3 10c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>',
     joy:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
     anxious:'<path d="M2.5 12l3-4.5 3 9 3-9 3 9 3-9 3 4.5"/>',
@@ -455,6 +461,7 @@
     pain:'<path d="M2.5 12h4l2-5.5 3.2 11 2.3-7.5 1.8 2h5.7"/>'
   };
   const icon=(k,cls)=>'<svg class="'+(cls||'ico')+'" viewBox="0 0 24 24" fill="none" stroke="'+(TONE[k]||'#80838e')+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[k]||'')+'</svg>';
+  const HY={'Перевантажено':'Переван\u00adтажено','Роздратовано':'Роздра\u00adтовано','Overwhelmed':'Over\u00adwhelmed'};
   const EX_MB=[['anxious','tired','calm'],['anxious','tense','anxious'],['calm','good','calm'],['sad','tired','empty'],['anxious','weak','calm']];
   const cv = $('c'), ctx = cv.getContext('2d'), stage = $('stage');
   const ta = $('stream'), exhaleBtn = $('exhale'), speech = $('speech'), countEl = $('count');
@@ -841,7 +848,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
         setTimeout(()=>{ c.hidden=true; c.classList.remove('leaving'); $('field-wrap').hidden=false; $('actions').hidden=false; resolve(v); }, reduce?0:220); };
       Object.entries(t[kind]).forEach(([k,label])=>{
         const b=document.createElement('button'); b.type='button'; b.className='chip'; b.setAttribute('aria-pressed','false');
-        b.innerHTML=icon(k,'big'); b.style.color=TONE[k]; const sp=document.createElement('span'); sp.textContent=label; sp.style.color='var(--text-primary)'; b.appendChild(sp);
+        b.innerHTML=icon(k,'big'); b.style.color=TONE[k]; const sp=document.createElement('span'); sp.textContent=HY[label]||label; sp.style.color='var(--text-primary)'; b.appendChild(sp);
         b.onclick=()=>{ b.setAttribute('aria-pressed','true'); pulse=performance.now(); kick(); finish(k); };
         box.appendChild(b);
       });
@@ -967,7 +974,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       el.appendChild(row);
     });
   }
-  const VAL={joy:2, calm:1, empty:0, sad:-1, anxious:-1, irritated:-1};
+  const VAL={joy:2, calm:1, okay:0, empty:0, sad:-1, anxious:-1, irritated:-1, overwhelmed:-1};
   function renderAnalytics(){
     const t=L(), box=$('analytics'); box.textContent='';
     const seg=document.createElement('div'); seg.className='seg'; seg.setAttribute('role','group');
@@ -1145,7 +1152,6 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     const row=document.createElement('div'); row.className='letters'; wm.appendChild(row);
     [...dim].forEach(ch=>{ const sp=document.createElement('span'); sp.className='dim'; sp.textContent=ch; row.appendChild(sp); });
     [...lit].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; sp.style.animationDelay=(i++*0.3)+'s'; row.appendChild(sp); });
-    const sub=document.createElement('div'); sub.className='wmsub'; sub.textContent=t.wmsub; wm.appendChild(sub);
     document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.lang===lang?'true':'false'));
     rerender(); updateCount();
     if($('panel').classList.contains('open')) $('open-stats').click();
@@ -1175,7 +1181,8 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     speech.textContent='';
     const tg=document.createElement('p'); tg.className='tagline'; tg.textContent=L().tagline;
     const b=document.createElement('button'); b.type='button'; b.className='startbtn'; b.textContent=L().startBtn; b.onclick=leaveIntro;
-    speech.append(tg, b);
+    const jr=document.createElement('p'); jr.className='wmsub'; jr.textContent=L().wmsub;
+    speech.append(tg, jr, b);
     resize(); startHints();
   }
   function leaveIntro(){
