@@ -1,5 +1,5 @@
 // Exhale service worker: app shell cached for offline use, fonts cached on first load.
-const CACHE = 'exhale-v14';
+const CACHE = 'exhale-v15';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon.png'];
 
 self.addEventListener('install', e => {

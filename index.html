@@ -199,11 +199,10 @@
   /* start screen: sphere + drifting hints */
   .hints{position:absolute; inset:0; pointer-events:none; z-index:1; overflow:hidden;}
   .caption{position:absolute; left:50%; top:0; transform:translate(-50%,-50%); margin:0; width:max-content; max-width:calc(100% - 32px); text-align:center; text-wrap:balance;
-    font:500 18px/26px var(--font-sans); letter-spacing:.01em; color:var(--text-secondary); text-shadow:0 1px 14px #080a0a;
+    font:500 13px/21px var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--aqua-400); text-shadow:0 0 12px #2feada44, 0 1px 14px #080a0a;
     opacity:0; filter:blur(5px); transition:opacity .9s ease, filter .9s ease;}
   .caption.show{opacity:1; filter:blur(0);}
-  .caption.acc{color:var(--aqua-400);}
-  @media (max-width:640px){ .caption{font-size:16px; line-height:24px;} }
+  @media (max-width:640px){ .caption{font-size:12px; line-height:20px; letter-spacing:.12em;} }
   @media (prefers-reduced-motion: reduce){ .caption{transition:none; filter:none;} }
   .hint{position:absolute; left:0; top:0; white-space:nowrap; font:500 15px/20px var(--font-sans); color:var(--text-secondary);
     text-shadow:0 1px 12px #080a0a, 0 0 2px #080a0a; opacity:0; animation:hintLife 6.4s ease-in-out forwards;}
@@ -456,7 +455,7 @@
     const intro=$('app').classList.contains('intro');
     if(phone && intro){ R=Math.max(80, Math.min(W*0.3, H*0.17)); CX=W/2; CY=H*0.45; }
     else if(phone){ R=Math.max(90, Math.min(W*0.46, H*0.3)); CX=W/2; CY=H*0.36; }
-    else if(intro){ R=Math.max(90, Math.min(W*0.2, H*0.24)); CX=W/2; CY=H*0.42; }
+    else if(intro){ R=Math.max(90, Math.min(W*0.2, H*0.24)); CX=W/2; CY=H*0.47; }
     else { R=Math.max(90, Math.min(W*0.25, H*0.3)); CX=W/2; CY=H*0.4; }
     const wm=$('wordmark'); wm.style.top=(intro ? CY+R*1.45 : CY)+'px';
   }
@@ -1140,14 +1139,14 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   /* one calm caption at a time, under the wordmark: fade in, hold, fade out */
   const ACC=new Set([0,3]);
   let capT=null, capN=0;
-  function placeCaption(){ const c=$('hints').querySelector('.caption'); if(c) c.style.top=(CY+R*1.45+ (matchMedia('(max-width:640px)').matches?52:64))+'px'; }
+  function placeCaption(){ const c=$('hints').querySelector('.caption'); if(c) c.style.top=(CY-R*1.2-(matchMedia('(max-width:640px)').matches?34:40))+'px'; }
   function nextCaption(){
     const box=$('hints'); let c=box.querySelector('.caption');
     if(!c){ c=document.createElement('p'); c.className='caption'; box.appendChild(c); }
     const list=L().hints, i=capN++%list.length;
     c.classList.remove('show');
     capT=setTimeout(()=>{
-      c.textContent=list[i]; c.classList.toggle('acc', ACC.has(i)); placeCaption();
+      c.textContent=list[i]; placeCaption();
       requestAnimationFrame(()=>c.classList.add('show'));
       capT=setTimeout(nextCaption, reduce?4200:3600);
     }, capN===1 ? 500 : (reduce?0:1000));
