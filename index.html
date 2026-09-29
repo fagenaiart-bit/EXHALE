@@ -363,8 +363,8 @@
       copyPrompt:'Ось мій щоденник думок, настрою і стану тіла. Подивись, які теми повторюються, як вони пов\'язані з настроєм і тілом, і що змінюється після видиху. Без оцінок і без порад, тільки спостереження.',
       periodLabel:{week:'за тиждень',month:'за місяць',all:'за весь час'},
       wordsT:'Слова, що повертаються', historyT:'Усі видихи',
-      privacy:'Думки зберігаються тільки в цьому браузері на цьому пристрої. Їх не бачить ніхто, навіть з тим самим посиланням.',
-      privacyLocked:'Текст думок зашифрований твоїм PIN-кодом і зберігається тільки на цьому пристрої. Настрій і стан тіла лишаються відкритими для аналітики.',
+      privacy:'Думки зберігаються тільки в цьому браузері на цьому пристрої. Їх не бачить ніхто, навіть з тим самим посиланням. Анонімно рахуємо лише кількість відвідувань сайту, без cookies.',
+      privacyLocked:'Текст думок зашифрований твоїм PIN-кодом і зберігається тільки на цьому пристрої. Настрій і стан тіла лишаються відкритими для аналітики. Анонімно рахуємо лише кількість відвідувань сайту, без cookies.',
       pinSetT:'Захисти щоденник', pinSetSub:'Придумай PIN-код із 4 цифр. Видихати можна й без нього, а читати записи — тільки з ним.',
       pinRepeat:'Повтори PIN-код', pinNew:'Новий PIN-код', pinMismatch:'Коди не збіглися. Спробуй ще раз.',
       pinWarn:'Якщо забудеш PIN, записи не відновити: вони зашифровані й зберігаються тільки тут.',
@@ -415,8 +415,8 @@
       copyPrompt:'Here is my journal of thoughts, mood and body. Look at which themes repeat, how they relate to mood and body, and what changes after exhaling. No judgement and no advice, only observations.',
       periodLabel:{week:'this week',month:'this month',all:'all time'},
       wordsT:'Words that keep coming back', historyT:'All exhales',
-      privacy:'Thoughts are stored only in this browser on this device. Nobody else can see them, even with the same link.',
-      privacyLocked:'The text of your thoughts is encrypted with your PIN and stored only on this device. Mood and body stay open for analytics.',
+      privacy:'Thoughts are stored only in this browser on this device. Nobody else can see them, even with the same link. We only count site visits, anonymously and without cookies.',
+      privacyLocked:'The text of your thoughts is encrypted with your PIN and stored only on this device. Mood and body stay open for analytics. We only count site visits, anonymously and without cookies.',
       pinSetT:'Protect your journal', pinSetSub:'Choose a 4-digit PIN. You can exhale without it, but reading entries needs it.',
       pinRepeat:'Repeat the PIN', pinNew:'New PIN', pinMismatch:'The codes did not match. Try again.',
       pinWarn:'If you forget the PIN, entries cannot be recovered: they are encrypted and stored only here.',
@@ -1203,5 +1203,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
 <script>
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
+<!-- Anonymous visit counter: page views only, no cookies. Thoughts, mood and journal never leave the device. -->
+<script data-goatcounter="https://vydykhai.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
