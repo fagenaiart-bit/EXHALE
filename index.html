@@ -205,16 +205,16 @@
   @keyframes breathe{50%{color:var(--text-secondary)}}
   @media (prefers-reduced-motion: reduce){ .hint{animation:none; opacity:.9;} .startbtn{animation:none;} }
   @media (max-width:640px){ .hint{font-size:14px;} }
-  .reps{display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
-  .reps .empty{padding:0;}
-  .rep{width:100%; box-sizing:border-box; background:var(--surface-raised); border:1px solid var(--border-hairline); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:10px;}
-  .rep-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-  .rep-head b{font-size:16px; line-height:22px; font-weight:600;}
-  .rep-n{font:500 13px/18px var(--font-mono); color:var(--aqua-400); font-variant-numeric:tabular-nums;}
-  .rep-head .moods{margin-left:auto;}
-  .rep ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px;}
-  .rep li{font-size:15px; line-height:22px; color:var(--text-secondary); overflow-wrap:anywhere;}
-  .rep li time{font:500 12px/18px var(--font-mono); color:var(--text-muted); margin-right:8px;}
+  .search{display:flex; align-items:center; gap:10px; background:var(--surface-raised); border:1px solid var(--border-hairline); border-radius:999px; padding:0 8px 0 16px; margin-bottom:6px; transition:border-color .1s;}
+  .search:focus-within{border-color:var(--jade-300);}
+  .search svg{width:18px; height:18px; color:var(--text-muted); flex:none;}
+  .search input{flex:1; min-width:0; background:transparent; border:0; outline:0; color:var(--text-primary); font:400 16px/22px var(--font-sans); padding:12px 0;}
+  .search input::placeholder{color:var(--text-muted);}
+  .search input::-webkit-search-cancel-button{display:none;}
+  .search .clear{flex:none; width:32px; height:32px; border-radius:50%; border:0; background:transparent; color:var(--text-muted); font-size:22px; line-height:1; cursor:pointer;}
+  .search .clear:hover{color:var(--text-primary);}
+  .found{margin:8px 0 18px; font:500 13px/18px var(--font-mono); color:var(--aqua-600);}
+  .entry li mark{background:none; color:var(--aqua-400); font-weight:600;}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
   @media (max-width:640px){
@@ -317,6 +317,8 @@
       startBtn:'Торкнись сфери, щоб почати',
       hints:['Приватно','Лише на твоєму телефоні','Без оцінок','Без порад','Говори або пиши','Щоденник під PIN-кодом','Кожне слово — дослівно','Настрій і тіло день за днем','Безкоштовно, без реєстрації','Просто дзеркало'],
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
+      searchPh:'Пошук у записах, напр. «мама»', searchLabel:'Пошук у записах', searchClear:'Очистити пошук', searchNone:'Нічого не знайдено.',
+      searchFound:(t,e)=>`Знайдено ${t} ${pluralUk(t,'думку','думки','думок')} у ${e} ${pluralUk(e,'записі','записах','записах')}`,
       journal:'Щоденник', diary:'Записи', analytics:'Аналітика', week:'Тиждень', month:'Місяць', all:'Весь час',
       today:'Сьогодні', yesterday:'Вчора', noEntries:'За цей період записів немає.',
       kExhales:'видихів', kThoughts:'думок', kDays:'днів з записом',
@@ -324,7 +326,6 @@
       legMood:'верхня іконка: настрій до', legBody:'нижня: тіло',
       shiftLine:(b,s,w,n)=>`Після видиху настрій покращився ${b} ${pluralUk(b,'раз','рази','разів')} з ${n}, не змінився ${s}, погіршився ${w}.`,
       copyT:'Скопіювати записи', copyNote:'Записи належать тобі. Можна скопіювати їх за обраний період, щоб зберегти окремо, перечитати деінде, показати психологу чи вставити в будь-який застосунок.', copyFoot:'Сам застосунок нічого нікуди не надсилає.', copyHead:p=>'Видихай — записи '+p,
-      repT:'Думки, що повертаються', repNote:'Схожі думки групуються за спільними словами прямо на телефоні. Без ШІ й без інтернету.', repLocked:'Тут видно текст твоїх думок, тому розділ відкривається PIN-кодом.', repOpen:'Відкрити', repNone:'За цей період думки не повторювались.', repTimes:n=>`${n} ${pluralUk(n,'раз','рази','разів')}`, repMostly:'найчастіше', repPinSub:'Введи PIN-код, щоб побачити думки, що повертаються.',
       copyBtn:p=>'Скопіювати записи '+p, copied:'Скопійовано', copyFail:'Не вдалося скопіювати. Виділи текст нижче вручну.',
       copyPrompt:'Ось мій щоденник думок, настрою і стану тіла. Подивись, які теми повторюються, як вони пов\'язані з настроєм і тілом, і що змінюється після видиху. Без оцінок і без порад, тільки спостереження.',
       periodLabel:{week:'за тиждень',month:'за місяць',all:'за весь час'},
@@ -366,6 +367,8 @@
       startBtn:'Tap the sphere to begin',
       hints:['Private','Only on your phone','No judgement','No advice','Talk or type','Journal locked with a PIN','Every word, as you said it','Mood and body, day by day','Free, no sign-up','Just a mirror'],
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
+      searchPh:'Search entries, e.g. “mom”', searchLabel:'Search entries', searchClear:'Clear search', searchNone:'Nothing found.',
+      searchFound:(t,e)=>`Found ${t} ${t===1?'thought':'thoughts'} in ${e} ${e===1?'entry':'entries'}`,
       journal:'Journal', diary:'Entries', analytics:'Analytics', week:'Week', month:'Month', all:'All time',
       today:'Today', yesterday:'Yesterday', noEntries:'No entries for this period.',
       kExhales:'exhales', kThoughts:'thoughts', kDays:'days with entries',
@@ -373,7 +376,6 @@
       legMood:'top icon: mood before', legBody:'bottom: body',
       shiftLine:(b,s,w,n)=>`After exhaling, mood got better ${b} of ${n} times, stayed the same ${s}, got worse ${w}.`,
       copyT:'Copy your entries', copyNote:'Your entries belong to you. Copy them for the chosen period to keep them elsewhere, reread them, show a therapist or paste them into any app.', copyFoot:'The app itself never sends anything anywhere.', copyHead:p=>'Exhale — entries '+p,
-      repT:'Thoughts that keep coming back', repNote:'Similar thoughts are grouped by shared words right on your phone. No AI, no internet.', repLocked:'This shows the text of your thoughts, so it opens with your PIN.', repOpen:'Open', repNone:'No thoughts repeated in this period.', repTimes:n=>`${n} ${n===1?'time':'times'}`, repMostly:'mostly', repPinSub:'Enter your PIN to see thoughts that keep coming back.',
       copyBtn:p=>'Copy entries for '+p, copied:'Copied', copyFail:'Could not copy. Select the text below manually.',
       copyPrompt:'Here is my journal of thoughts, mood and body. Look at which themes repeat, how they relate to mood and body, and what changes after exhaling. No judgement and no advice, only observations.',
       periodLabel:{week:'this week',month:'this month',all:'all time'},
@@ -858,20 +860,56 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     if(hasLock() && !priv){ pinPad(box, 'unlock', async()=>{ await openAll(viewDumps); render(viewDumps, viewExample); }); return; }
     if(hasLock() && viewDumps.some(d=>d.enc && !opened.has(d.at))){ openAll(viewDumps).then(()=>render(viewDumps, viewExample)); return; }
     if(!viewDumps.length){ box.innerHTML='<p class="empty"></p>'; box.firstChild.textContent=L().noEntries; return; }
-    const tf=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{hour:'2-digit',minute:'2-digit'});
-    let last='';
-    viewDumps.slice().sort((a,b)=>b.at-a.at).forEach(d=>{
-      const k=dayKey(d.at);
-      if(k!==last){ const h=document.createElement('h3'); h.className='dayhead'; h.textContent=dayTitle(d.at); box.appendChild(h); last=k; }
-      const e=document.createElement('article'); e.className='entry';
-      const head=document.createElement('div'); head.className='entry-head';
-      const tm=document.createElement('time'); tm.dateTime=new Date(d.at).toISOString(); tm.textContent=tf.format(new Date(d.at)); head.appendChild(tm);
-      const m=document.createElement('span'); m.className='moods'; m.innerHTML=moodsHTML(d); head.appendChild(m);
-      e.appendChild(head);
-      const ul=document.createElement('ul');
-      thoughtsOf(d).forEach(t=>{ const li=document.createElement('li'); li.textContent=t.text; ul.appendChild(li); });
-      e.appendChild(ul); box.appendChild(e);
+    const t=L();
+    const sw=document.createElement('div'); sw.className='search';
+    sw.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="diary-search" type="search" autocomplete="off" spellcheck="false"><button type="button" class="clear" hidden>×</button>';
+    const inp=sw.querySelector('input'), clr=sw.querySelector('.clear');
+    inp.placeholder=t.searchPh; inp.setAttribute('aria-label', t.searchLabel); inp.value=query; clr.setAttribute('aria-label', t.searchClear); clr.hidden=!query;
+    const info=document.createElement('p'); info.className='found'; info.setAttribute('aria-live','polite');
+    const list=document.createElement('div');
+    box.append(sw, info, list);
+    inp.addEventListener('input', ()=>{ query=inp.value; clr.hidden=!query; drawList(); });
+    clr.onclick=()=>{ query=''; inp.value=''; clr.hidden=true; drawList(); inp.focus(); };
+    function drawList(){
+      list.textContent='';
+      const pre=prefixes(query);
+      const tf=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{hour:'2-digit',minute:'2-digit'});
+      let last='', nT=0, nE=0;
+      viewDumps.slice().sort((a,b)=>b.at-a.at).forEach(d=>{
+        let th=thoughtsOf(d);
+        if(pre.length) th=th.filter(x=>matches(x.text, pre));
+        if(!th.length) return;
+        nT+=th.length; nE++;
+        const k=dayKey(d.at);
+        if(k!==last){ const h=document.createElement('h3'); h.className='dayhead'; h.textContent=dayTitle(d.at); list.appendChild(h); last=k; }
+        const e=document.createElement('article'); e.className='entry';
+        const head=document.createElement('div'); head.className='entry-head';
+        const tm=document.createElement('time'); tm.dateTime=new Date(d.at).toISOString(); tm.textContent=tf.format(new Date(d.at)); head.appendChild(tm);
+        const m=document.createElement('span'); m.className='moods'; m.innerHTML=moodsHTML(d); head.appendChild(m);
+        e.appendChild(head);
+        const ul=document.createElement('ul');
+        th.forEach(x=>{ const li=document.createElement('li'); highlight(li, x.text, pre); ul.appendChild(li); });
+        e.appendChild(ul); list.appendChild(e);
+      });
+      info.textContent = pre.length ? (nT ? t.searchFound(nT, nE) : t.searchNone) : '';
+      info.hidden = !pre.length;
+    }
+    drawList();
+  }
+  let query='';
+  // search by word stem so other grammatical forms match: мама → мамі, маму
+  function prefixes(q){
+    return (q.toLowerCase().match(/[\p{L}\p{N}'’-]+/gu)||[]).map(w=> w.length>=6 ? w.slice(0,5) : w.length>=4 ? w.slice(0,-1) : w);
+  }
+  function wordsWithPos(text){ const out=[]; const re=/[\p{L}\p{N}'’-]+/gu; let m; while((m=re.exec(text))) out.push({w:m[0], i:m.index}); return out; }
+  function matches(text, pre){ const ws=wordsWithPos(text).map(x=>x.w.toLowerCase()); return pre.every(p=>ws.some(w=>w.startsWith(p))); }
+  function highlight(el, text, pre){
+    if(!pre.length){ el.textContent=text; return; }
+    let pos=0;
+    wordsWithPos(text).forEach(({w,i})=>{
+      if(pre.some(p=>w.toLowerCase().startsWith(p))){ el.append(text.slice(pos,i)); const mk=document.createElement('mark'); mk.textContent=w; el.appendChild(mk); pos=i+w.length; }
     });
+    el.append(text.slice(pos));
   }
   function inPeriod(){
     if(period==='all') return viewDumps.slice();
@@ -923,7 +961,6 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       grid.appendChild(c);
     }
     const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML='<span></span><span></span>'; lg.children[0].textContent=t.legMood; lg.children[1].textContent=t.legBody; dd.appendChild(lg);
-    // renderRepeats(sec(t.repT), list);  // parked: word-based grouping, waiting for a decision
     // shift
     const pairs=list.filter(d=>d.mood&&d.moodAfter);
     if(pairs.length){
@@ -955,51 +992,6 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       function fallback(){ const ta2=document.createElement('textarea'); ta2.value=txt; ta2.style.cssText='width:100%;min-height:160px;margin-top:8px;background:var(--surface-sunk);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:10px;padding:10px;font:13px/18px var(--font-sans)'; cb.appendChild(ta2); ta2.select(); btn.textContent=t.copyFail; }
     };
     box.appendChild(cb);
-  }
-  /* thoughts that keep coming back: grouped on-device by shared significant words */
-  function groupRepeats(list){
-    const items=[];
-    list.forEach((d,di)=>thoughtsOf(d).forEach(t=>{ const st=new Set(words(t.text).map(stem)); if(st.size) items.push({d, di, text:t.text, st, forms:words(t.text)}); }));
-    const parent=items.map((_,i)=>i), find=i=>parent[i]===i?i:(parent[i]=find(parent[i]));
-    for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){
-      const a=items[i].st, b=items[j].st; let n=0; a.forEach(x=>{ if(b.has(x)) n++; });
-      if(n && n/Math.min(a.size,b.size)>=0.5) parent[find(i)]=find(j);
-    }
-    const groups=new Map(); items.forEach((it,i)=>{ const r=find(i); if(!groups.has(r)) groups.set(r,[]); groups.get(r).push(it); });
-    return [...groups.values()].filter(g=>new Set(g.map(x=>x.di)).size>1).map(g=>{
-      const cnt={}; g.forEach(it=>{ const seen=new Set(); it.forms.forEach(w=>{ const k=stem(w); if(seen.has(k)) return; seen.add(k); cnt[k]=cnt[k]||{n:0, forms:{}}; cnt[k].n++; cnt[k].forms[w]=(cnt[k].forms[w]||0)+1; }); });
-      const topStem=Object.entries(cnt).sort((a,b)=>b[1].n-a[1].n)[0][1];
-      const word=Object.entries(topStem.forms).sort((a,b)=>b[1]-a[1])[0][0];
-      const moods={}; g.forEach(it=>{ const m=it.d.mood; if(m) moods[m]=(moods[m]||0)+1; });
-      const mood=(Object.entries(moods).sort((a,b)=>b[1]-a[1])[0]||[])[0];
-      return {label:word.charAt(0).toUpperCase()+word.slice(1), times:new Set(g.map(x=>x.di)).size, items:g.slice().sort((a,b)=>b.d.at-a.d.at), mood};
-    }).sort((a,b)=>b.times-a.times).slice(0,8);
-  }
-  function renderRepeats(sec, list){
-    const t=L();
-    const body=document.createElement('div'); body.className='reps'; sec.appendChild(body);
-    if(hasLock() && !priv && list.some(d=>d.enc)){
-      const p=document.createElement('p'); p.className='empty'; p.textContent=t.repLocked;
-      const b=document.createElement('button'); b.type='button'; b.className='ghost'; b.textContent=t.repOpen;
-      b.onclick=()=>{ body.textContent=''; const pad=document.createElement('div'); pad.style.width='100%'; body.appendChild(pad);
-        pinPad(pad,'unlock', async()=>{ await openAll(viewDumps); renderAnalytics(); }, {sub:t.repPinSub, onCancel:()=>renderAnalytics()}); };
-      body.append(p, b); return;
-    }
-    const groups=groupRepeats(list);
-    if(!groups.length){ const p=document.createElement('p'); p.className='empty'; p.textContent=t.repNone; body.appendChild(p); }
-    const df=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric', month:'short'});
-    groups.forEach(g=>{
-      const card=document.createElement('div'); card.className='rep';
-      const h=document.createElement('div'); h.className='rep-head';
-      const nm=document.createElement('b'); nm.textContent=g.label;
-      const n=document.createElement('span'); n.className='rep-n'; n.textContent=t.repTimes(g.times);
-      h.append(nm, n);
-      if(g.mood){ const m=document.createElement('span'); m.className='moods'; m.innerHTML=icon(g.mood)+'<span></span>'; m.lastChild.textContent=t.repMostly+' '+t.mood[g.mood].toLowerCase(); h.appendChild(m); }
-      const ul=document.createElement('ul');
-      g.items.slice(0,3).forEach(it=>{ const li=document.createElement('li'); const tm=document.createElement('time'); tm.textContent=df.format(new Date(it.d.at)); li.append(tm, it.text); ul.appendChild(li); });
-      card.append(h, ul); body.appendChild(card);
-    });
-    const note=document.createElement('p'); note.className='legend'; note.textContent=t.repNote; body.appendChild(note);
   }
   $('tab-diary').onclick=()=>{ tab='diary'; render(viewDumps, viewExample); };
   $('tab-an').onclick=()=>{ tab='an'; render(viewDumps, viewExample); };
