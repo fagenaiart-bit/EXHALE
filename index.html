@@ -239,6 +239,11 @@
   .found{margin:8px 0 18px; font:500 13px/18px var(--font-mono); color:var(--aqua-600);}
   .entry li mark{background:none; color:var(--aqua-400); font-weight:600;}
   .field-wrap textarea:focus-visible{outline:none;}
+  .snd{width:36px; height:36px; border-radius:50%; border:1px solid var(--border-hairline); background:transparent; color:var(--text-muted); display:grid; place-items:center; cursor:pointer; transition:color .1s, border-color .1s;}
+  .snd:hover{color:var(--text-primary); border-color:var(--jade-300);}
+  .snd svg{width:18px; height:18px;}
+  .snd[aria-pressed="true"]{color:var(--aqua-400);}
+  .snd[aria-pressed="true"] .x, .snd[aria-pressed="false"] .w1, .snd[aria-pressed="false"] .w2{display:none;}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
   @media (max-width:640px){
@@ -268,6 +273,7 @@
     <span class="brand" id="brand" aria-hidden="true"></span>
     <span class="overline" id="count"></span>
     <div class="top-right">
+      <button class="snd" id="snd" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="w1" d="M15.5 9a4 4 0 0 1 0 6"/><path class="w2" d="M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
       <div class="lang" role="group" aria-label="Мова / Language">
         <button type="button" data-lang="uk" aria-pressed="true">UA</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
@@ -331,6 +337,70 @@
 (() => {
   const $ = id => document.getElementById(id);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* ---------- soft ASMR sounds, synthesised with Web Audio (no files) ---------- */
+  const SFX=(()=>{
+    let on=true; try{ on=localStorage.getItem('exhale-sound')!=='0'; }catch(e){}
+    let ctx=null, out=null, noise=null;
+    function ac(){
+      if(!on) return null;
+      try{
+        if(!ctx){
+          const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null;
+          ctx=new AC();
+          const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=3;
+          out=ctx.createGain(); out.gain.value=0.9; out.connect(comp); comp.connect(ctx.destination);
+          noise=ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+          const d=noise.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+        }
+        if(ctx.state==='suspended') ctx.resume();
+        return ctx;
+      }catch(e){ return null; }
+    }
+    const env=(g,t,a,peak,dec)=>{ g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec); };
+    function tone(freq,{type='sine',a=.005,dec=.25,peak=.2,slideTo=null,slide=.08,delay=0}={}){
+      const c=ac(); if(!c) return; const t=c.currentTime+delay;
+      const o=c.createOscillator(), g=c.createGain(); o.type=type; o.frequency.setValueAtTime(freq,t);
+      if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+slide);
+      env(g,t,a,peak,dec); o.connect(g); g.connect(out); o.start(t); o.stop(t+a+dec+.05);
+    }
+    function hiss({dur=.4,from=800,to=3000,q=.9,peak=.18,a=.08,type='bandpass',delay=0}={}){
+      const c=ac(); if(!c) return; const t=c.currentTime+delay;
+      const src=c.createBufferSource(); src.buffer=noise; src.loop=true;
+      const f=c.createBiquadFilter(); f.type=type; f.Q.value=q; f.frequency.setValueAtTime(from,t); f.frequency.exponentialRampToValueAtTime(to,t+dur);
+      const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      src.connect(f); f.connect(g); g.connect(out); src.start(t); src.stop(t+dur+.05);
+    }
+    // squishy "jelly" blob: pitch pops up then settles, with a fast wobble that dies away, low-passed
+    function jelly(f,{peak=.22,dec=.42,wob=.09,delay=0}={}){
+      const c=ac(); if(!c) return; const t=c.currentTime+delay;
+      const o=c.createOscillator(), g=c.createGain(), lp=c.createBiquadFilter();
+      o.type='sine'; lp.type='lowpass'; lp.frequency.value=f*3.2; lp.Q.value=.7;
+      o.frequency.setValueAtTime(f*.72,t); o.frequency.exponentialRampToValueAtTime(f*1.28,t+.035); o.frequency.exponentialRampToValueAtTime(f,t+.16);
+      const lfo=c.createOscillator(), ld=c.createGain(); lfo.frequency.value=13;
+      ld.gain.setValueAtTime(f*wob,t); ld.gain.exponentialRampToValueAtTime(.01,t+dec*.8);
+      lfo.connect(ld); ld.connect(o.frequency);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+.012); g.gain.exponentialRampToValueAtTime(peak*.45,t+.09); g.gain.exponentialRampToValueAtTime(0.0001,t+dec);
+      o.connect(lp); lp.connect(g); g.connect(out);
+      o.start(t); lfo.start(t); o.stop(t+dec+.05); lfo.stop(t+dec+.05);
+    }
+    const JF=[196,220,247,262,294,330,349,392];
+    return {
+      get on(){ return on; },
+      set(v){ on=v; try{ localStorage.setItem('exhale-sound', v?'1':'0'); }catch(e){} if(!v && ctx) ctx.suspend(); },
+      tap(){ jelly(240,{peak:.1,dec:.2,wob:.05}); },
+      pick(n=0){ jelly(JF[n%8]); },
+      start(){ hiss({dur:1.1,from:300,to:1800,q:.7,peak:.14,a:.35}); jelly(147,{peak:.2,dec:.6,delay:.05}); jelly(220,{peak:.12,dec:.55,delay:.22}); },
+      fly(){ hiss({dur:.9,from:600,to:3800,q:1.1,peak:.07,a:.3}); },
+      bloop(){ jelly(175+Math.random()*60,{peak:.2,dec:.38}); },
+      exhale(){ hiss({dur:2.4,from:2600,to:260,q:.6,peak:.26,a:.12,type:'lowpass'}); tone(98,{a:.2,dec:2,peak:.08});
+        jelly(196,{peak:.16,dec:.7,delay:.9}); jelly(147,{peak:.14,dec:.8,delay:1.15}); },
+      pin(){ jelly(300+Math.random()*30,{peak:.1,dec:.16,wob:.05}); },
+      wrong(){ jelly(110,{peak:.2,dec:.45,wob:.14}); },
+      unlock(){ jelly(247,{peak:.16,dec:.45}); jelly(330,{peak:.14,dec:.55,delay:.13}); },
+      micOn(){ jelly(262,{peak:.14,dec:.3}); jelly(349,{peak:.12,dec:.35,delay:.09}); },
+      micOff(){ jelly(349,{peak:.12,dec:.3}); jelly(262,{peak:.12,dec:.35,delay:.09}); }
+    };
+  })();
   const pluralUk=(n,a,b,c)=>{ const m=n%10,h=n%100; return m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c); };
   const I18N={
     uk:{ name:['ВИ','ДИХАЙ'], title:'Видихай',
@@ -348,6 +418,7 @@
       tagline:'Скажи все, що крутиться в голові, — і видихни.', wmsub:'Твій щоденник',
       startBtn:'Торкнись сфери, щоб почати',
       hints:['Приватно. Лише на твоєму телефоні.','Без оцінок. Без порад.','Говори або пиши — як є.','Щоденник під PIN-кодом.','Настрій і тіло — день за днем.','Безкоштовно, без реєстрації.'],
+      sndOn:'Вимкнути звук', sndOff:'Увімкнути звук',
       moodL:'Твій настрій', bodyL:'Твоє самопочуття', afterL:'Твій настрій зараз',
       skip:'Пропустити', moodQ:['Який у тебе зараз настрій?','Перед тим як почати. Одне слово.'], bodyQ:['А як почувається тіло?','Теж одне слово.'], afterQ:['А тепер який настрій?','Після видиху.'],
       searchPh:'Пошук у записах, напр. «мама»', searchLabel:'Пошук у записах', searchClear:'Очистити пошук', searchNone:'Нічого не знайдено.',
@@ -400,6 +471,7 @@
       tagline:'Say everything that’s spinning in your head — and exhale.', wmsub:'Your journal',
       startBtn:'Tap the sphere to begin',
       hints:['Private. Only on your phone.','No judgement. No advice.','Talk or type — just as it is.','Your journal is locked with a PIN.','Mood and body, day by day.','Free, no sign-up.'],
+      sndOn:'Turn sound off', sndOff:'Turn sound on',
       moodL:'Your mood', bodyL:'Your body', afterL:'Your mood now',
       skip:'Skip', moodQ:['How is your mood right now?','Before we start. One word.'], bodyQ:['And how does your body feel?','One word too.'], afterQ:['And your mood now?','After the exhale.'],
       searchPh:'Search entries, e.g. “mom”', searchLabel:'Search entries', searchClear:'Clear search', searchNone:'Nothing found.',
@@ -589,8 +661,9 @@
     const x0=r.left+Math.min(r.width-w, 12+Math.random()*Math.max(0,r.width-w-24)), y0=r.top+4;
     const tx=s.left+CX-w/2, ty=s.top+CY-h/2;
     const side=(Math.random()<.5?-1:1)*(60+Math.random()*80);
-    const done=()=>{ el.remove(); pulse=performance.now(); kick(); };
+    const done=()=>{ el.remove(); pulse=performance.now(); kick(); SFX.bloop(); };
     if(reduce){ done(); return; }
+    SFX.fly();
     const anim=el.animate([
       {transform:`translate(${x0}px,${y0}px) scale(1)`, opacity:0},
       {transform:`translate(${x0}px,${y0-18}px) scale(1)`, opacity:1, offset:.12},
@@ -736,15 +809,16 @@
       try{
         if(mode==='unlock'){
           err.textContent=t.pinWorking;
-          try{ await unlock(code); fails=0; err.textContent=''; done(); }
-          catch(e){ fails++; shake(t.pinWrong); if(fails>=5){ waitUntil=Date.now()+30000*Math.pow(2, Math.min(fails-5, 4)); waitTick(); } }
+          try{ await unlock(code); fails=0; err.textContent=''; SFX.unlock(); done(); }
+          catch(e){ fails++; SFX.wrong(); shake(t.pinWrong); if(fails>=5){ waitUntil=Date.now()+30000*Math.pow(2, Math.min(fails-5, 4)); waitTick(); } }
         } else if(first===null){ first=code; code=''; paint(); err.textContent=''; stage(); }
         else if(first!==code){ first=null; stage(); shake(t.pinMismatch); }
-        else { err.textContent=t.pinWorking; if(mode==='change') await changePin(code); else await setupLock(code); err.textContent=''; done(); }
+        else { err.textContent=t.pinWorking; if(mode==='change') await changePin(code); else await setupLock(code); err.textContent=''; SFX.unlock(); done(); }
       } finally { busy=false; }
     }
     const press=k=>{
       if(busy || Date.now()<waitUntil) return;
+      SFX.pin();
       if(k==='del'){ code=code.slice(0,-1); paint(); return; }
       if(code.length>=4) return;
       code+=k; err.textContent=''; paint();
@@ -805,7 +879,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     clearTimeout(pauseT); harvest(true);
     await new Promise(r=>setTimeout(r, reduce?0:900));
     if(!fragments.length) return;
-    const frags=fragments.slice(); fragments=[]; updateCount();
+    const frags=fragments.slice(); fragments=[]; updateCount(); SFX.exhale();
     exhaleAt=performance.now(); charge=0; kick();
     exhaleBtn.disabled=true;
     say(...L().sorting);
@@ -849,7 +923,8 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       Object.entries(t[kind]).forEach(([k,label])=>{
         const b=document.createElement('button'); b.type='button'; b.className='chip'; b.setAttribute('aria-pressed','false');
         b.innerHTML=icon(k,'big'); b.style.color=TONE[k]; const sp=document.createElement('span'); sp.textContent=HY[label]||label; sp.style.color='var(--text-primary)'; b.appendChild(sp);
-        b.onclick=()=>{ b.setAttribute('aria-pressed','true'); pulse=performance.now(); kick(); finish(k); };
+        const idx=box.children.length;
+        b.onclick=()=>{ b.setAttribute('aria-pressed','true'); pulse=performance.now(); kick(); SFX.pick(idx); finish(k); };
         box.appendChild(b);
       });
       $('skip').onclick=()=>finish(null);
@@ -1034,15 +1109,15 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
           return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+thoughtsOf(d).map(x=>'- '+x.text).join('\n');
         }).join('\n\n');
         const txt=(kind==='ai' ? t.copyPrompt+'\n\n' : '')+t.copyHead(t.periodLabel[period])+'\n\n'+entries;
-        const ok=()=>{ btn.textContent=t.copied; setTimeout(()=>btn.textContent=label, 3000); };
+        const ok=()=>{ SFX.pick(4); btn.textContent=t.copied; setTimeout(()=>btn.textContent=label, 3000); };
         try{ navigator.clipboard.writeText(txt).then(ok, ()=>fallback()); }catch(e){ fallback(); }
         function fallback(){ const old=cb.querySelector('textarea'); if(old) old.remove(); const ta2=document.createElement('textarea'); ta2.value=txt; ta2.readOnly=true; ta2.style.cssText='width:100%;box-sizing:border-box;min-height:160px;background:var(--surface-sunk);color:var(--text-primary);border:1px solid var(--border-hairline);border-radius:10px;padding:10px;font:13px/18px var(--font-sans)'; btns.after(ta2); ta2.select(); btn.textContent=t.copyFail; }
       };
     });
     box.appendChild(cb);
   }
-  $('tab-diary').onclick=()=>{ tab='diary'; render(viewDumps, viewExample); };
-  $('tab-an').onclick=()=>{ tab='an'; render(viewDumps, viewExample); };
+  $('tab-diary').onclick=()=>{ SFX.tap(); tab='diary'; render(viewDumps, viewExample); };
+  $('tab-an').onclick=()=>{ SFX.tap(); tab='an'; render(viewDumps, viewExample); };
   const STOP=new Set(('треба мабуть може можу можна тому дуже щось якщо коли тепер зараз сьогодні навіть взагалі знову також тільки просто того цього цьому цей цих який яка яке які якого мене мені мною тебе тобі його вона воно вони нашу наша наше наші свою своє свій свої бути буде було була були хочу хоче хочеш нарешті думаю думка думки чому тоді поки після перед через щоб або ніби наче майже досі вже хоча десь кудись завжди ніколи інколи іноді типу все всі усе усі весь вся тут там ось отже знаю напевно справді потрібно потім зовсім зробити робити'
     +' about that this with have just what when where then they them there really maybe need want still again also from into would could should think thinking okay yeah like some thing things because know going will been were your mine more much very even only ever never always every today now tomorrow').split(/\s+/));
   function words(text){ return (text.toLowerCase().match(/[\p{L}'’-]+/gu)||[]).map(w=>w.replace(/^['’-]+|['’-]+$/g,'')).filter(w=>w.length>=4 && !STOP.has(w)); }
@@ -1056,6 +1131,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     $('stats-meta').textContent=L().wiped+' '+$('stats-meta').textContent;
   };
   $('open-stats').onclick=async()=>{
+    SFX.tap();
     const d=await loadDumps();
     render(d.length?d:example(), !d.length);
     $('panel').classList.add('open'); $('close-stats').focus();
@@ -1097,7 +1173,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   }
   function startMic(){
     if(!SR){ say(L().ask, L().noVoice); return; }
-    listening=true; listenLvl=1; liveLine('');
+    listening=true; listenLvl=1; liveLine(''); SFX.micOn();
     stage.setAttribute('aria-pressed','true');
     runRec();
   }
@@ -1125,7 +1201,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   }
   function stopMic(){
     if(!listening) return;
-    listening=false; listenLvl=0; clearTimeout(restartT); flushBuffer();
+    listening=false; listenLvl=0; clearTimeout(restartT); flushBuffer(); SFX.micOff();
     stage.setAttribute('aria-pressed','false');
     try{ rec&&rec.stop(); }catch(e){}
     if(rerender===showAsk) showAsk();
@@ -1145,7 +1221,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   function applyLang(){
     const t=L(); document.documentElement.lang=lang; document.title=t.title;
     document.querySelectorAll('[data-t]').forEach(el=>{ el.textContent=t[el.dataset.t]; });
-    ta.placeholder=t.placeholder; stage.setAttribute('aria-label', t.micLabel); stopMic();
+    ta.placeholder=t.placeholder; paintSnd(); stage.setAttribute('aria-label', t.micLabel); stopMic();
     const br=$('brand'); br.textContent=''; [...t.name[0]].forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; br.appendChild(sp); }); [...t.name[1]].forEach(ch=>{ const sp=document.createElement('span'); sp.className='on'; sp.textContent=ch; br.appendChild(sp); });
     const wm=$('wordmark'); wm.textContent=''; wm.setAttribute('aria-label', t.title);
     const [dim,lit]=t.name; let i=0;
@@ -1156,7 +1232,9 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     rerender(); updateCount();
     if($('panel').classList.contains('open')) $('open-stats').click();
   }
-  document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; try{localStorage.setItem('exhale-lang',lang);}catch(e){} applyLang(); });
+  function paintSnd(){ const b=$('snd'); b.setAttribute('aria-pressed', SFX.on); b.setAttribute('aria-label', SFX.on ? L().sndOn : L().sndOff); b.title=b.getAttribute('aria-label'); }
+  $('snd').onclick=()=>{ SFX.set(!SFX.on); paintSnd(); if(SFX.on) SFX.pick(2); };
+  document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ SFX.tap(); lang=b.dataset.lang; try{localStorage.setItem('exhale-lang',lang);}catch(e){} applyLang(); });
   /* ---------- start screen ---------- */
   /* one calm caption at a time, under the wordmark: fade in, hold, fade out */
   const ACC=new Set([0,3]);
@@ -1188,7 +1266,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   function leaveIntro(){
     if(rerender!==showIntro) return;
     $('app').classList.remove('intro'); stopHints(); resize();
-    pulse=performance.now(); kick();
+    pulse=performance.now(); kick(); SFX.start();
     requestAnimationFrame(resize);
     startSession();
   }
