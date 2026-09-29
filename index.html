@@ -167,6 +167,25 @@
   .legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:var(--text-muted);}
   .copybox{margin-top:28px; padding:16px; border:1px solid var(--border-hairline); border-radius:14px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
   .copybox p{margin:0; font-size:13px; line-height:18px; color:var(--text-muted);}
+  /* PIN pad */
+  .pin{display:flex; flex-direction:column; align-items:center; gap:18px; padding:28px 0 8px; text-align:center;}
+  .pin h3{margin:0; font-size:22px; line-height:28px; font-weight:600;}
+  .pin p{margin:0; max-width:32em; font-size:14px; line-height:20px; color:var(--text-muted); text-wrap:balance;}
+  .pin .warn{color:#e9c14d;}
+  .dots{display:flex; gap:16px; margin:4px 0;}
+  .dots i{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--jade-300); transition:background .12s, box-shadow .12s;}
+  .dots i.on{background:var(--aqua-400); border-color:var(--aqua-400); box-shadow:0 0 12px #2feada66;}
+  .pin.shake .dots{animation:shake .38s;}
+  @keyframes shake{20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)}}
+  .keys{display:grid; grid-template-columns:repeat(3,72px); gap:12px;}
+  .keys button{width:72px; height:72px; border-radius:50%; border:1px solid var(--border-hairline); background:var(--surface-raised); color:var(--text-primary); font:500 26px/1 var(--font-mono); cursor:pointer; transition:border-color .1s, background .1s;}
+  .keys button:hover{border-color:var(--jade-300);}
+  .keys button:active{background:var(--surface-sunk);}
+  .keys button.fn{background:transparent; border-color:transparent; font:600 14px/1 var(--font-sans); color:var(--text-muted);}
+  .keys button:disabled{opacity:.35; cursor:default;}
+  .pin .err{min-height:20px; color:#ed302a; font-size:14px;}
+  .linkbtn{font:500 13px/18px var(--font-sans); color:var(--text-muted); background:none; border:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:4px;}
+  .linkbtn:hover{color:var(--text-secondary);}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
   @media (max-width:420px){ .top,.panel-head{padding-inline:16px;} .dock{padding-inline:16px;} .panel-body{padding-inline:16px;} .speech p.big{font-size:22px; line-height:28px;} }
   @media (max-width:640px){
@@ -237,8 +256,12 @@
       <div class="wrap" id="diary"></div>
       <div class="wrap" id="analytics" hidden></div>
       <div class="privacy">
-        <p data-t="privacy"></p>
-        <button class="danger" id="wipe" type="button" data-t="wipe"></button>
+        <p id="privacy-text"></p>
+        <div class="row-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="danger" id="pin-lock" type="button" data-t="pinLock" hidden></button>
+          <button class="danger" id="pin-change" type="button" data-t="pinChange" hidden></button>
+          <button class="danger" id="wipe" type="button" data-t="wipe"></button>
+        </div>
       </div>
     </div>
   </section>
@@ -257,7 +280,7 @@
       repeats:'Що повторюється', back:'Назад до сфери', once:'Один раз',
       listening:['Слухаю.','Так виглядає потік, коли говориш, не зупиняючись.'],
       sorting:['Видих.','Голова чиста. Розкладаю думки по місцях.'],
-      saved:(n,r)=>['Видих.', `Збережено ${n} ${pluralUk(n,'думку','думки','думок')}.`+(r?` ${r} з них уже приходили раніше.`:' Усе нове.')],
+      saved:(n,r,lk)=>['Видих.', `Збережено ${n} ${pluralUk(n,'думку','думки','думок')}.`+(lk?' Під замком.':(r?` ${r} з них уже приходили раніше.`:' Усе нове.'))],
       meta:(ex,d,t)=>(ex?'Приклад · ':'')+d+' '+pluralUk(d,'видих','видихи','видихів')+' · '+t+' '+pluralUk(t,'думка','думки','думок'),
       noteEx:'Поки що тут приклад. Після першого видиху тут будуть твої думки.',
       note:'Лише рахунок, без порад.',
@@ -275,6 +298,14 @@
       periodLabel:{week:'за тиждень',month:'за місяць',all:'за весь час'},
       wordsT:'Слова, що повертаються', historyT:'Усі видихи',
       privacy:'Думки зберігаються тільки в цьому браузері на цьому пристрої. Їх не бачить ніхто, навіть з тим самим посиланням.',
+      privacyLocked:'Текст думок зашифрований твоїм PIN-кодом і зберігається тільки на цьому пристрої. Настрій і стан тіла лишаються відкритими для аналітики.',
+      pinSetT:'Захисти щоденник', pinSetSub:'Придумай PIN-код із 4 цифр. Видихати можна й без нього, а читати записи — тільки з ним.',
+      pinRepeat:'Повтори PIN-код', pinNew:'Новий PIN-код', pinMismatch:'Коди не збіглися. Спробуй ще раз.',
+      pinWarn:'Якщо забудеш PIN, записи не відновити: вони зашифровані й зберігаються тільки тут.',
+      pinEnterT:'Щоденник під замком', pinEnterSub:'Введи PIN-код, щоб читати записи.', pinCopySub:'Введи PIN-код, щоб скопіювати записи.',
+      pinWrong:'Неправильний PIN.', pinWait:s=>`Забагато спроб. Зачекай ${s} с.`, pinWorking:'Відкриваю…',
+      pinForgot:'Забула PIN?', pinForgotText:'Без PIN-коду записи не відкрити. Можна лише видалити все й почати спочатку, кнопка внизу сторінки.',
+      pinChange:'Змінити PIN', pinChanged:'PIN змінено.', pinDel:'Стерти', pinCancel:'Скасувати', pinLock:'Закрити на замок',
       wipe:'Видалити всі думки', wipeSure:'Точно? Натисни ще раз', wiped:'Видалено.',
       noRepeatsLong:'Поки нічого не повертається. Коли одне слово з\'явиться в різних видихах, воно стане тут.',
       again:'Новий видих', moodBefore:'Настрій до', moodAfterT:'Настрій після', shiftT:'Як змінився настрій', same:'без змін', bodyTitle:'Тіло', mostly:'Найчастіше: ',
@@ -295,7 +326,7 @@
       repeats:'What keeps coming back', back:'Back to the sphere', once:'Just once',
       listening:['Listening.','This is what a stream looks like when you just keep talking.'],
       sorting:['Exhale.','Your head is clear. Sorting the thoughts now.'],
-      saved:(n,r)=>['Exhale.', `Saved ${n} ${n===1?'thought':'thoughts'}.`+(r?` ${r} of them came up before.`:' All new.')],
+      saved:(n,r,lk)=>['Exhale.', `Saved ${n} ${n===1?'thought':'thoughts'}.`+(lk?' Locked.':(r?` ${r} of them came up before.`:' All new.'))],
       meta:(ex,d,t)=>(ex?'Example · ':'')+d+' '+(d===1?'exhale':'exhales')+' · '+t+' '+(t===1?'thought':'thoughts'),
       noteEx:'This is an example. After your first exhale, your own thoughts will show up here.',
       note:'Counts only, no advice.',
@@ -313,6 +344,14 @@
       periodLabel:{week:'this week',month:'this month',all:'all time'},
       wordsT:'Words that keep coming back', historyT:'All exhales',
       privacy:'Thoughts are stored only in this browser on this device. Nobody else can see them, even with the same link.',
+      privacyLocked:'The text of your thoughts is encrypted with your PIN and stored only on this device. Mood and body stay open for analytics.',
+      pinSetT:'Protect your journal', pinSetSub:'Choose a 4-digit PIN. You can exhale without it, but reading entries needs it.',
+      pinRepeat:'Repeat the PIN', pinNew:'New PIN', pinMismatch:'The codes did not match. Try again.',
+      pinWarn:'If you forget the PIN, entries cannot be recovered: they are encrypted and stored only here.',
+      pinEnterT:'Journal is locked', pinEnterSub:'Enter your PIN to read entries.', pinCopySub:'Enter your PIN to copy entries.',
+      pinWrong:'Wrong PIN.', pinWait:s=>`Too many attempts. Wait ${s} s.`, pinWorking:'Opening…',
+      pinForgot:'Forgot PIN?', pinForgotText:'Entries cannot be opened without the PIN. You can only delete everything and start over, the button is at the bottom.',
+      pinChange:'Change PIN', pinChanged:'PIN changed.', pinDel:'Delete', pinCancel:'Cancel', pinLock:'Lock',
       wipe:'Delete all thoughts', wipeSure:'Sure? Tap again', wiped:'Deleted.',
       noRepeatsLong:'Nothing keeps coming back yet. When the same word shows up in different exhales, it will appear here.',
       again:'New exhale', moodBefore:'Mood before', moodAfterT:'Mood after', shiftT:'How the mood shifted', same:'no change', bodyTitle:'Body', mostly:'Mostly ',
@@ -529,8 +568,129 @@
   }
   async function saveDump(dump){
     if(db&&uid){ try{ await db.collection('data/users/'+uid).doc('d'+dump.at).set(dump); return; }catch(e){} }
-    try{ const all=JSON.parse(localStorage.getItem(LS)||'[]'); all.push(dump); localStorage.setItem(LS, JSON.stringify(all)); }catch(e){}
+    try{ if(hasLock()) dump=await sealDump(dump); const all=JSON.parse(localStorage.getItem(LS)||'[]'); all.push(dump); localStorage.setItem(LS, JSON.stringify(all)); }catch(e){}
   }
+  /* ---------- lock: thoughts are sealed with a public key; only the PIN opens the private key ---------- */
+  const LOCK='exhale-lock-v1';
+  const SUB=crypto.subtle, EC={name:'ECDH', namedCurve:'P-256'};
+  const b64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const unb64=s=>Uint8Array.from(atob(s), c=>c.charCodeAt(0));
+  const enc=new TextEncoder(), dec=new TextDecoder();
+  let priv=null;                  // unlocked private key lives only in memory
+  const opened=new Map();         // at -> thoughts (decrypted, memory only)
+  let fails=0, waitUntil=0;
+  function getLock(){ try{ return JSON.parse(localStorage.getItem(LOCK)||'null'); }catch(e){ return null; } }
+  const hasLock=()=>!!(SUB && getLock());
+  async function pinKey(pin, salt){
+    const base=await SUB.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+    return SUB.deriveKey({name:'PBKDF2', salt, iterations:310000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+  }
+  async function wrapPriv(key, pin, pubRaw){
+    const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+    const pk=await SUB.exportKey('pkcs8', key);
+    const wrapped=await SUB.encrypt({name:'AES-GCM', iv}, await pinKey(pin, salt), pk);
+    localStorage.setItem(LOCK, JSON.stringify({v:1, pub:pubRaw, salt:b64(salt), iv:b64(iv), wrapped:b64(wrapped)}));
+  }
+  async function sealThoughts(thoughts){
+    const lk=getLock();
+    const pub=await SUB.importKey('raw', unb64(lk.pub), EC, false, []);
+    const eph=await SUB.generateKey(EC, true, ['deriveKey']);
+    const aes=await SUB.deriveKey({name:'ECDH', public:pub}, eph.privateKey, {name:'AES-GCM', length:256}, false, ['encrypt']);
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await SUB.encrypt({name:'AES-GCM', iv}, aes, enc.encode(JSON.stringify(thoughts)));
+    return {epk:b64(await SUB.exportKey('raw', eph.publicKey)), iv:b64(iv), ct:b64(ct)};
+  }
+  async function openThoughts(box){
+    const epk=await SUB.importKey('raw', unb64(box.epk), EC, false, []);
+    const aes=await SUB.deriveKey({name:'ECDH', public:epk}, priv, {name:'AES-GCM', length:256}, false, ['decrypt']);
+    return JSON.parse(dec.decode(await SUB.decrypt({name:'AES-GCM', iv:unb64(box.iv)}, aes, unb64(box.ct))));
+  }
+  async function sealDump(d){
+    if(!d.thoughts) return d;
+    const out={...d, n:d.thoughts.length, enc:await sealThoughts(d.thoughts)}; delete out.thoughts; return out;
+  }
+  async function setupLock(pin){
+    const kp=await SUB.generateKey(EC, true, ['deriveKey']);
+    const pubRaw=b64(await SUB.exportKey('raw', kp.publicKey));
+    await wrapPriv(kp.privateKey, pin, pubRaw);
+    priv=kp.privateKey;
+    // seal everything written before the PIN existed
+    const all=JSON.parse(localStorage.getItem(LS)||'[]');
+    all.forEach(d=>{ if(d.thoughts) opened.set(d.at, d.thoughts); });
+    localStorage.setItem(LS, JSON.stringify(await Promise.all(all.map(sealDump))));
+  }
+  async function unlock(pin){
+    const lk=getLock();
+    const pk=await SUB.decrypt({name:'AES-GCM', iv:unb64(lk.iv)}, await pinKey(pin, unb64(lk.salt)), unb64(lk.wrapped));
+    priv=await SUB.importKey('pkcs8', pk, EC, true, ['deriveKey']);
+  }
+  async function changePin(pin){ await wrapPriv(priv, pin, getLock().pub); }
+  function lockNow(){ priv=null; opened.clear(); }
+  async function openAll(dumps){
+    for(const d of dumps){ if(d.enc && !opened.has(d.at)){ try{ opened.set(d.at, await openThoughts(d.enc)); }catch(e){ opened.set(d.at, []); } } }
+  }
+  const thoughtsOf=d=>d.thoughts || opened.get(d.at) || [];
+  const countOf=d=>d.thoughts ? d.thoughts.length : (d.n||0);
+  addEventListener('visibilitychange', ()=>{ if(document.hidden && priv){ lockNow(); if($('panel').classList.contains('open')) render(viewDumps, viewExample); } });
+
+  /* PIN pad: mode 'set' | 'change' | 'unlock'; calls done() on success */
+  function pinPad(box, mode, done, opts={}){
+    const t=L(); box.textContent='';
+    const w=document.createElement('div'); w.className='pin'; box.appendChild(w);
+    let code='', first=null, busy=false;
+    const title=document.createElement('h3'), sub=document.createElement('p'), dots=document.createElement('div'), err=document.createElement('div'), keys=document.createElement('div');
+    dots.className='dots'; dots.setAttribute('aria-hidden','true'); for(let i=0;i<4;i++) dots.appendChild(document.createElement('i'));
+    err.className='err'; err.setAttribute('role','status'); keys.className='keys';
+    w.append(title, sub, dots, err, keys);
+    const stage=()=>{
+      if(mode==='unlock'){ title.textContent=opts.title||t.pinEnterT; sub.textContent=opts.sub||t.pinEnterSub; }
+      else if(first===null){ title.textContent= mode==='change' ? t.pinNew : t.pinSetT; sub.textContent= mode==='change' ? '' : t.pinSetSub; }
+      else { title.textContent=t.pinRepeat; sub.textContent=''; }
+    };
+    const paint=()=>[...dots.children].forEach((d,i)=>d.classList.toggle('on', i<code.length));
+    const shake=msg=>{ err.textContent=msg; w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake'); code=''; paint(); };
+    const waitTick=()=>{ const s=Math.ceil((waitUntil-Date.now())/1000); if(s>0){ err.textContent=t.pinWait(s); keys.querySelectorAll('button').forEach(b=>b.disabled=true); setTimeout(waitTick, 500); } else { err.textContent=''; keys.querySelectorAll('button').forEach(b=>b.disabled=false); } };
+    async function complete(){
+      busy=true;
+      try{
+        if(mode==='unlock'){
+          err.textContent=t.pinWorking;
+          try{ await unlock(code); fails=0; err.textContent=''; done(); }
+          catch(e){ fails++; shake(t.pinWrong); if(fails>=5){ waitUntil=Date.now()+30000*Math.pow(2, Math.min(fails-5, 4)); waitTick(); } }
+        } else if(first===null){ first=code; code=''; paint(); err.textContent=''; stage(); }
+        else if(first!==code){ first=null; stage(); shake(t.pinMismatch); }
+        else { err.textContent=t.pinWorking; if(mode==='change') await changePin(code); else await setupLock(code); err.textContent=''; done(); }
+      } finally { busy=false; }
+    }
+    const press=k=>{
+      if(busy || Date.now()<waitUntil) return;
+      if(k==='del'){ code=code.slice(0,-1); paint(); return; }
+      if(code.length>=4) return;
+      code+=k; err.textContent=''; paint();
+      if(code.length===4) setTimeout(complete, 120);
+    };
+    ['1','2','3','4','5','6','7','8','9','cancel','0','del'].forEach(k=>{
+      const b=document.createElement('button'); b.type='button';
+      if(k==='del'){ b.className='fn'; b.textContent='⌫'; b.setAttribute('aria-label', t.pinDel); b.onclick=()=>press('del'); }
+      else if(k==='cancel'){ b.className='fn'; if(opts.onCancel){ b.textContent=t.pinCancel; b.onclick=opts.onCancel; } else { b.tabIndex=-1; b.style.visibility='hidden'; } }
+      else { b.textContent=k; b.onclick=()=>press(k); }
+      keys.appendChild(b);
+    });
+    if(mode!=='unlock'){ const wn=document.createElement('p'); wn.className='warn'; wn.textContent=t.pinWarn; w.appendChild(wn); }
+    if(mode==='unlock'){
+      const fg=document.createElement('button'); fg.type='button'; fg.className='linkbtn'; fg.textContent=t.pinForgot;
+      fg.onclick=()=>{ const p=document.createElement('p'); p.textContent=t.pinForgotText; fg.replaceWith(p); };
+      w.appendChild(fg);
+    }
+    box._pinKeys=e=>{ if(/^[0-9]$/.test(e.key)) press(e.key); else if(e.key==='Backspace') press('del'); };
+    stage(); paint(); if(Date.now()<waitUntil) waitTick();
+  }
+  addEventListener('keydown', e=>{
+    if(!$('panel').classList.contains('open')) return;
+    const box=[$('diary'), $('analytics')].find(b=>!b.hidden && b.querySelector('.pin'));
+    if(box && box._pinKeys && !e.metaKey && !e.ctrlKey) box._pinKeys(e);
+  });
+
   const norm=s=>s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
 
   /* ---------- formulate + sort ---------- */
@@ -579,7 +739,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     const repeats=thoughts.filter(t=>words(t.text).some(w=>pastStems.has(stem(w)))).length;
     const dump={at:Date.now(), thoughts}; if(mood) dump.mood=mood; if(body) dump.body=body; if(moodAfter) dump.moodAfter=moodAfter;
     await saveDump(dump);
-    lastSaved=[thoughts.length, repeats];
+    lastSaved=[thoughts.length, repeats, hasLock()];
     showSaved();
   };
   let lastSaved=null;
@@ -633,12 +793,15 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   const startOfDay=ts=>{ const d=new Date(ts); d.setHours(0,0,0,0); return d.getTime(); };
   function render(dumps, isExample){
     viewDumps=dumps; viewExample=isExample;
-    const total=dumps.reduce((s,d)=>s+(d.thoughts||[]).length,0);
+    const total=dumps.reduce((s,d)=>s+countOf(d),0);
     $('stats-meta').textContent = L().meta(isExample, dumps.length, total);
     $('tab-diary').setAttribute('aria-selected', tab==='diary'); $('tab-an').setAttribute('aria-selected', tab==='an');
     $('diary').hidden = tab!=='diary'; $('analytics').hidden = tab!=='an';
     tab==='diary' ? renderDiary() : renderAnalytics();
-    const wipe=$('wipe'); wipe.hidden=isExample; wipe.classList.remove('armed'); wipe.textContent=L().wipe;
+    const wipe=$('wipe'); wipe.hidden=isExample && !hasLock(); wipe.classList.remove('armed'); wipe.textContent=L().wipe;
+    $('privacy-text').textContent = hasLock() ? L().privacyLocked : L().privacy;
+    $('pin-change').hidden = !(hasLock() && priv && tab==='diary');
+    $('pin-lock').hidden = !(hasLock() && priv && tab==='diary');
   }
   function dayTitle(ts){
     const t0=startOfDay(Date.now()), d0=startOfDay(ts);
@@ -653,7 +816,10 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     return h;
   }
   function renderDiary(){
-    const box=$('diary'); box.textContent='';
+    const box=$('diary'); box.textContent=''; box._pinKeys=null;
+    if(!viewExample && !hasLock() && SUB){ pinPad(box, 'set', ()=>render(viewDumps, false)); return; }
+    if(hasLock() && !priv){ pinPad(box, 'unlock', async()=>{ await openAll(viewDumps); render(viewDumps, viewExample); }); return; }
+    if(hasLock() && viewDumps.some(d=>d.enc && !opened.has(d.at))){ openAll(viewDumps).then(()=>render(viewDumps, viewExample)); return; }
     if(!viewDumps.length){ box.innerHTML='<p class="empty"></p>'; box.firstChild.textContent=L().noEntries; return; }
     const tf=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{hour:'2-digit',minute:'2-digit'});
     let last='';
@@ -666,7 +832,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
       const m=document.createElement('span'); m.className='moods'; m.innerHTML=moodsHTML(d); head.appendChild(m);
       e.appendChild(head);
       const ul=document.createElement('ul');
-      (d.thoughts||[]).forEach(t=>{ const li=document.createElement('li'); li.textContent=t.text; ul.appendChild(li); });
+      thoughtsOf(d).forEach(t=>{ const li=document.createElement('li'); li.textContent=t.text; ul.appendChild(li); });
       e.appendChild(ul); box.appendChild(e);
     });
   }
@@ -697,7 +863,7 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     ['week','month','all'].forEach(p=>{ const b=document.createElement('button'); b.type='button'; b.textContent=t[p]; b.setAttribute('aria-pressed', p===period); b.onclick=()=>{ period=p; renderAnalytics(); }; seg.appendChild(b); });
     box.appendChild(seg);
     const list=inPeriod();
-    const nT=list.reduce((s,d)=>s+(d.thoughts||[]).length,0), nD=new Set(list.map(d=>dayKey(d.at))).size;
+    const nT=list.reduce((s,d)=>s+countOf(d),0), nD=new Set(list.map(d=>dayKey(d.at))).size;
     const k=document.createElement('div'); k.className='kpis';
     [[list.length,t.kExhales],[nT,t.kThoughts],[nD,t.kDays]].forEach(([v,l])=>{ const d=document.createElement('div'); d.className='kpi'; d.innerHTML='<b></b><span></span>'; d.querySelector('b').textContent=v; d.querySelector('span').textContent=l; k.appendChild(d); });
     box.appendChild(k);
@@ -735,10 +901,15 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     cb.children[0].textContent=t.copyT; cb.children[1].textContent=t.copyNote;
     const btn=cb.children[2]; btn.textContent=t.copyBtn;
     btn.onclick=()=>{
+      if(hasLock() && !priv){
+        const pad=document.createElement('div'); cb.appendChild(pad); btn.hidden=true;
+        pinPad(pad, 'unlock', async()=>{ await openAll(list); renderAnalytics(); }, {sub:t.pinCopySub, onCancel:()=>renderAnalytics()});
+        return;
+      }
       const fmt=new Intl.DateTimeFormat(lang==='uk'?'uk-UA':'en-GB',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
       const txt=t.copyPrompt+'\n\n'+list.slice().sort((a,b)=>a.at-b.at).map(d=>{
         const mb=[d.mood&&(t.mood[d.mood]), d.moodAfter&&('→ '+t.mood[d.moodAfter]), d.body&&(t.bodyT+': '+t.body[d.body])].filter(Boolean).join(' ');
-        return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+(d.thoughts||[]).map(x=>'- '+x.text).join('\n');
+        return fmt.format(new Date(d.at))+(mb?' ('+mb+')':'')+'\n'+thoughtsOf(d).map(x=>'- '+x.text).join('\n');
       }).join('\n\n');
       const ok=()=>{ btn.textContent=t.copied; setTimeout(()=>btn.textContent=t.copyBtn, 2000); };
       try{ navigator.clipboard.writeText(txt).then(ok, ()=>fallback()); }catch(e){ fallback(); }
@@ -755,7 +926,8 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
   $('wipe').onclick=()=>{
     const b=$('wipe');
     if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent=L().wipeSure; clearTimeout(b._t); b._t=setTimeout(()=>{ b.classList.remove('armed'); b.textContent=L().wipe; }, 4000); return; }
-    try{ localStorage.removeItem(LS); }catch(e){}
+    try{ localStorage.removeItem(LS); localStorage.removeItem(LOCK); }catch(e){}
+    lockNow();
     render(example(), true);
     $('stats-meta').textContent=L().wiped+' '+$('stats-meta').textContent;
   };
@@ -764,8 +936,12 @@ Reply with JSON only: {"thoughts":[{"text":"...","theme":"..."}]}`,
     render(d.length?d:example(), !d.length);
     $('panel').classList.add('open'); $('close-stats').focus();
   };
-  $('close-stats').onclick=()=>{ $('panel').classList.remove('open'); $('open-stats').focus(); };
-  addEventListener('keydown',e=>{ if(e.key==='Escape') $('panel').classList.remove('open'); });
+  function closePanel(){ $('panel').classList.remove('open'); lockNow(); $('open-stats').focus(); }
+  $('close-stats').onclick=closePanel;
+  addEventListener('keydown',e=>{ if(e.key==='Escape' && $('panel').classList.contains('open')) closePanel(); });
+  $('pin-change').onclick=()=>{ const box=$('diary'); $('pin-change').hidden=true; $('pin-lock').hidden=true;
+    pinPad(box, 'change', ()=>{ render(viewDumps, viewExample); $('stats-meta').textContent=L().pinChanged; }, {onCancel:()=>render(viewDumps, viewExample)}); };
+  $('pin-lock').onclick=()=>{ lockNow(); render(viewDumps, viewExample); };
 
   /* ---------- voice: tap the sphere ---------- */
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
